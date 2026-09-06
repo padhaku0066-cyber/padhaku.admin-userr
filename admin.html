@@ -601,7 +601,7 @@
 
         // Keep the client variable available to every existing Admin Panel function.
         // Do not let a CDN/init error stop the rest of this script from defining handleLogin().
-        let supabase = null;
+        let supabaseClient = null;
 
         function initializeSupabase() {
             try {
@@ -609,7 +609,7 @@
                     throw new Error('Supabase library failed to load.');
                 }
 
-                supabase = window.supabase.createClient(
+                supabaseClient = window.supabase.createClient(
                     SUPABASE_URL,
                     SUPABASE_PUBLISHABLE_KEY,
                     {
@@ -624,7 +624,7 @@
                 return true;
             } catch (error) {
                 console.error('Supabase initialization failed:', error);
-                supabase = null;
+                supabaseClient = null;
                 return false;
             }
         }
@@ -639,13 +639,13 @@
         // ==================== AUTH FUNCTIONS ====================
         
         async function checkSession() {
-            if (!supabase) {
+            if (!supabaseClient) {
                 showLoginError('Authentication service could not be loaded. Please refresh the page.');
                 return;
             }
 
             try {
-                const { data: { session }, error } = await supabase.auth.getSession();
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
                 if (error) throw error;
                 if (session) {
                     await verifyAdmin(session.user);
@@ -657,7 +657,7 @@
         }
 
         async function verifyAdmin(user) {
-            if (!supabase) {
+            if (!supabaseClient) {
                 showLoginError('Authentication service is not available. Please refresh the page.');
                 return false;
             }
@@ -677,13 +677,13 @@
                     showAdminPanel();
                     return true;
                 } else {
-                    await supabase.auth.signOut();
+                    await supabaseClient.auth.signOut();
                     showLoginError('Access denied. Admin account required.');
                     return false;
                 }
             } catch (error) {
                 console.error('Error verifying admin:', error);
-                await supabase.auth.signOut();
+                await supabaseClient.auth.signOut();
                 showLoginError(error.message || 'Unable to verify admin account.');
                 return false;
             }
@@ -694,7 +694,7 @@
             errorEl.classList.add('hidden');
             errorEl.textContent = '';
 
-            if (!supabase) {
+            if (!supabaseClient) {
                 showLoginError('Authentication service could not be loaded. Please refresh the page.');
                 return;
             }
@@ -710,7 +710,7 @@
             showLoginLoading(true);
 
             try {
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: email,
                     password: password
                 });
@@ -729,7 +729,7 @@
 
         async function handleLogout() {
             try {
-                await supabase.auth.signOut();
+                await supabaseClient.auth.signOut();
                 currentUser = null;
                 currentProfile = null;
                 showLoginScreen();
@@ -850,12 +850,12 @@
             
             try {
                 const [studentsResult, materialsResult, videosResult, newsResult, caResult, testsResult] = await Promise.all([
-                    supabase.from('profile').select('*', { count: 'exact', head: true }), // FIXED: 'profile' to 'profile', added head: true
-                    supabase.from('materials').select('*', { count: 'exact', head: true }),
-                    supabase.from('videos').select('*', { count: 'exact', head: true }),
-                    supabase.from('news').select('*', { count: 'exact', head: true }),
-                    supabase.from('current_affairs').select('*', { count: 'exact', head: true }),
-                    supabase.from('tests').select('*', { count: 'exact', head: true })
+                    supabaseClient.from('profile').select('*', { count: 'exact', head: true }), // FIXED: 'profile' to 'profile', added head: true
+                    supabaseClient.from('materials').select('*', { count: 'exact', head: true }),
+                    supabaseClient.from('videos').select('*', { count: 'exact', head: true }),
+                    supabaseClient.from('news').select('*', { count: 'exact', head: true }),
+                    supabaseClient.from('current_affairs').select('*', { count: 'exact', head: true }),
+                    supabaseClient.from('tests').select('*', { count: 'exact', head: true })
                 ]);
 
                 const totalStudents = studentsResult.count || 0;
@@ -1418,9 +1418,9 @@
             try {
                 let result;
                 if (videoId) {
-                    result = await supabase.from('videos').update(videoData).eq('id', videoId);
+                    result = await supabaseClient.from('videos').update(videoData).eq('id', videoId);
                 } else {
-                    result = await supabase.from('videos').insert(videoData);
+                    result = await supabaseClient.from('videos').insert(videoData);
                 }
 
                 if (result.error) throw result.error;
@@ -1438,7 +1438,7 @@
             if (!confirm('Are you sure you want to delete this video?')) return;
             
             try {
-                const { error } = await supabase.from('videos').delete().eq('id', videoId);
+                const { error } = await supabaseClient.from('videos').delete().eq('id', videoId);
                 if (error) throw error;
                 showToast('Video deleted successfully', 'success');
                 switchPage('videos');
@@ -1598,9 +1598,9 @@
             try {
                 let result;
                 if (newsId) {
-                    result = await supabase.from('news').update(newsData).eq('id', newsId);
+                    result = await supabaseClient.from('news').update(newsData).eq('id', newsId);
                 } else {
-                    result = await supabase.from('news').insert(newsData);
+                    result = await supabaseClient.from('news').insert(newsData);
                 }
 
                 if (result.error) throw result.error;
@@ -1618,7 +1618,7 @@
             if (!confirm('Are you sure you want to delete this news?')) return;
             
             try {
-                const { error } = await supabase.from('news').delete().eq('id', newsId);
+                const { error } = await supabaseClient.from('news').delete().eq('id', newsId);
                 if (error) throw error;
                 showToast('News deleted successfully', 'success');
                 switchPage('news');
@@ -1785,9 +1785,9 @@
             try {
                 let result;
                 if (affairId) {
-                    result = await supabase.from('current_affairs').update(affairData).eq('id', affairId);
+                    result = await supabaseClient.from('current_affairs').update(affairData).eq('id', affairId);
                 } else {
-                    result = await supabase.from('current_affairs').insert(affairData);
+                    result = await supabaseClient.from('current_affairs').insert(affairData);
                 }
 
                 if (result.error) throw result.error;
@@ -1805,7 +1805,7 @@
             if (!confirm('Are you sure you want to delete this entry?')) return;
             
             try {
-                const { error } = await supabase.from('current_affairs').delete().eq('id', affairId);
+                const { error } = await supabaseClient.from('current_affairs').delete().eq('id', affairId);
                 if (error) throw error;
                 showToast('Entry deleted successfully', 'success');
                 switchPage('current-affairs');
@@ -2031,9 +2031,9 @@
             try {
                 let testResult;
                 if (testId) {
-                    testResult = await supabase.from('tests').update(testData).eq('id', testId);
+                    testResult = await supabaseClient.from('tests').update(testData).eq('id', testId);
                 } else {
-                    testResult = await supabase.from('tests').insert(testData).select();
+                    testResult = await supabaseClient.from('tests').insert(testData).select();
                 }
                 
                 if (testResult.error) throw testResult.error;
@@ -2042,7 +2042,7 @@
                 
                 // Delete existing questions if editing
                 if (testId) {
-                    await supabase.from('test_questions').delete().eq('test_id', testId);
+                    await supabaseClient.from('test_questions').delete().eq('test_id', testId);
                 }
                 
                 // Save questions
@@ -2067,7 +2067,7 @@
                 });
                 
                 if (questions.length > 0) {
-                    const { error: qError } = await supabase.from('test_questions').insert(questions);
+                    const { error: qError } = await supabaseClient.from('test_questions').insert(questions);
                     if (qError) throw qError;
                 }
                 
@@ -2084,7 +2084,7 @@
             if (!confirm('Are you sure you want to delete this test?')) return;
             
             try {
-                const { error } = await supabase.from('tests').delete().eq('id', testId);
+                const { error } = await supabaseClient.from('tests').delete().eq('id', testId);
                 if (error) throw error;
                 showToast('Test deleted successfully', 'success');
                 switchPage('tests');
@@ -2282,9 +2282,9 @@
             try {
                 let roadmapResult;
                 if (roadmapId) {
-                    roadmapResult = await supabase.from('roadmaps').update(roadmapData).eq('id', roadmapId);
+                    roadmapResult = await supabaseClient.from('roadmaps').update(roadmapData).eq('id', roadmapId);
                 } else {
-                    roadmapResult = await supabase.from('roadmaps').insert(roadmapData).select();
+                    roadmapResult = await supabaseClient.from('roadmaps').insert(roadmapData).select();
                 }
                 
                 if (roadmapResult.error) throw roadmapResult.error;
@@ -2292,7 +2292,7 @@
                 const savedRoadmapId = roadmapId || roadmapResult.data[0].id;
                 
                 if (roadmapId) {
-                    await supabase.from('roadmap_steps').delete().eq('roadmap_id', roadmapId);
+                    await supabaseClient.from('roadmap_steps').delete().eq('roadmap_id', roadmapId);
                 }
                 
                 const stepDivs = document.querySelectorAll('#stepsList > div');
@@ -2314,7 +2314,7 @@
                 });
                 
                 if (steps.length > 0) {
-                    const { error: sError } = await supabase.from('roadmap_steps').insert(steps);
+                    const { error: sError } = await supabaseClient.from('roadmap_steps').insert(steps);
                     if (sError) throw sError;
                 }
                 
@@ -2331,7 +2331,7 @@
             if (!confirm('Are you sure you want to delete this roadmap?')) return;
             
             try {
-                const { error } = await supabase.from('roadmaps').delete().eq('id', roadmapId);
+                const { error } = await supabaseClient.from('roadmaps').delete().eq('id', roadmapId);
                 if (error) throw error;
                 showToast('Roadmap deleted successfully', 'success');
                 switchPage('roadmaps');
