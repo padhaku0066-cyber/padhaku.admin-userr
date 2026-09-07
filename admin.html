@@ -2350,7 +2350,6 @@
                 const { data: students, error } = await supabaseClient
                     .from('profile') // FIXED: changed 'profile' to 'profile'
                     .select('*');
-                
                 if (error) throw error;
                 
                 container.innerHTML = `
@@ -2377,7 +2376,7 @@
                                             <td>${s.full_name || 'N/A'}</td>
                                             <td>${s.mobile || 'N/A'}</td>
                                             <td><span class="badge ${s.role === 'admin' ? 'badge-admin' : ''}">${s.role || 'student'}</span></td>
-                                            <td>${s.created_at ? new Date(s.created_at).toLocaleDateString() :  <td>N/A</td>
+                                            <td>${s.created_at ? new Date(s.created_at).toLocaleDateString() : <td>N/A</td>
                                         </tr>
                                     `).join('') : '<tr><td colspan="4" style="text-align: center;">No students found</td></tr>'}
                                 </tbody>
