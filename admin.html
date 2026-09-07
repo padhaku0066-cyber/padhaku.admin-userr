@@ -663,7 +663,7 @@
             }
 
             try {
-                const { data: profile, error } = await supabase
+                const { data: profile, error } = await supabaseClient
                     .from('profile') // FIXED: changed 'profile' to 'profile'
                     .select('*')
                     .eq('id', user.id)
@@ -927,7 +927,7 @@
             container.innerHTML = '<div style="text-align: center; padding: 3rem;"><div class="loading-spinner"></div></div>';
             
             try {
-                const { data: materials, error } = await supabase
+                const { data: materials, error } = await supabaseClient
                     .from('materials')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -1019,7 +1019,7 @@
 
         async function loadMaterialForEdit(materialId) {
             try {
-                const { data: material, error } = await supabase
+                const { data: material, error } = await supabaseClient
                     .from('materials')
                     .select('*')
                     .eq('id', materialId)
@@ -1111,12 +1111,12 @@
             try {
                 let result;
                 if (materialId) {
-                    result = await supabase
+                    result = await supabaseClient
                         .from('materials')
                         .update(materialData)
                         .eq('id', materialId);
                 } else {
-                    result = await supabase
+                    result = await supabaseClient
                         .from('materials')
                         .insert(materialData);
                 }
@@ -1136,7 +1136,7 @@
             if (!confirm('Are you sure you want to delete this material?')) return;
             
             try {
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('materials')
                     .delete()
                     .eq('id', materialId);
@@ -1266,7 +1266,7 @@
             container.innerHTML = '<div style="text-align: center; padding: 3rem;"><div class="loading-spinner"></div></div>';
             
             try {
-                const { data: videos, error } = await supabase
+                const { data: videos, error } = await supabaseClient
                     .from('videos')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -1340,7 +1340,7 @@
 
         async function loadVideoForEdit(videoId) {
             try {
-                const { data: video, error } = await supabase
+                const { data: video, error } = await supabaseClient
                     .from('videos')
                     .select('*')
                     .eq('id', videoId)
@@ -1454,7 +1454,7 @@
             container.innerHTML = '<div style="text-align: center; padding: 3rem;"><div class="loading-spinner"></div></div>';
             
             try {
-                const { data: news, error } = await supabase
+                const { data: news, error } = await supabaseClient
                     .from('news')
                     .select('*')
                     .order('published_date', { ascending: false });
@@ -1528,7 +1528,7 @@
 
         async function loadNewsForEdit(newsId) {
             try {
-                const { data: news, error } = await supabase
+                const { data: news, error } = await supabaseClient
                     .from('news')
                     .select('*')
                     .eq('id', newsId)
@@ -1634,7 +1634,7 @@
             container.innerHTML = '<div style="text-align: center; padding: 3rem;"><div class="loading-spinner"></div></div>';
             
             try {
-                const { data: affairs, error } = await supabase
+                const { data: affairs, error } = await supabaseClient
                     .from('current_affairs')
                     .select('*')
                     .order('date', { ascending: false });
@@ -1745,7 +1745,7 @@
 
         async function loadCurrentAffairForEdit(affairId) {
             try {
-                const { data: affair, error } = await supabase
+                const { data: affair, error } = await supabaseClient
                     .from('current_affairs')
                     .select('*')
                     .eq('id', affairId)
@@ -1821,7 +1821,7 @@
             container.innerHTML = '<div style="text-align: center; padding: 3rem;"><div class="loading-spinner"></div></div>';
             
             try {
-                const { data: tests, error } = await supabase
+                const { data: tests, error } = await supabaseClient
                     .from('tests')
                     .select('*')
                     .order('created_at', { ascending: false });
@@ -1929,7 +1929,7 @@
 
         async function loadTestForEdit(testId) {
             try {
-                const { data: test, error } = await supabase
+                const { data: test, error } = await supabaseClient
                     .from('tests')
                     .select('*')
                     .eq('id', testId)
@@ -1944,7 +1944,7 @@
                 document.getElementById('testDescription').value = test.description || '';
                 document.getElementById('testPublished').checked = test.published || false;
                 
-                const { data: questions, error: qError } = await supabase
+                const { data: questions, error: qError } = await supabaseClient
                     .from('test_questions')
                     .select('*')
                     .eq('test_id', testId)
