@@ -601,7 +601,7 @@
 
         // Keep the client variable available to every existing Admin Panel function.
         // Do not let a CDN/init error stop the rest of this script from defining handleLogin().
-        let supabase = null;
+        let supabaseClient = null;
 
         function initializeSupabase() {
             try {
@@ -609,7 +609,7 @@
                     throw new Error('Supabase library failed to load.');
                 }
 
-                supabase = window.supabase.createClient(
+                supabaseClient = window.supabase.createClient(
                     SUPABASE_URL,
                     SUPABASE_PUBLISHABLE_KEY,
                     {
