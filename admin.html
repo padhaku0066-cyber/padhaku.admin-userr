@@ -2204,7 +2204,7 @@
 
         async function loadRoadmapForEdit(roadmapId) {
             try {
-                const { data: roadmap, error } = await supabase
+                const { data: roadmap, error } = await supabaseClient
                     .from('roadmaps')
                     .select('*')
                     .eq('id', roadmapId)
@@ -2218,7 +2218,7 @@
                 document.getElementById('rmDescription').value = roadmap.description || '';
                 document.getElementById('rmPublished').checked = roadmap.published || false;
                 
-                const { data: steps, error: sError } = await supabase
+                const { data: steps, error: sError } = await supabaseClient
                     .from('roadmap_steps')
                     .select('*')
                     .eq('roadmap_id', roadmapId)
