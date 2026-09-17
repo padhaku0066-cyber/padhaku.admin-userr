@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PADHAKU - Learn Today. Prepare for Tomorrow.</title>
+    <meta name="description" content="PADHAKU is a premium educational platform offering study materials, video lectures, notes, practice questions, current affairs and preparation roadmaps for classes 1-12 and competitive exams.">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <style>
+        :root {
+            --navy-900: #102a43; --navy-800: #243b53; --navy-700: #334e68;
+            --navy-600: #486581; --navy-500: #627d98; --navy-400: #829ab1;
+            --navy-300: #9fb3c8; --navy-200: #bcccdc; --navy-100: #d9e2ec;
+            --navy-50: #f0f4f8; --gold-500: #f59e0b; --gold-600: #d97706;
+            --gold-400: #fbbf24; --gold-100: #fef3c7; --white: #ffffff;
+            --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+            --gray-300: #d1d5db; --gray-500: #6b7280; --gray-700: #374151;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+            --radius-md: 0.5rem; --radius-lg: 0.75rem;
+            --radius-xl: 1rem; --radius-2xl: 1.5rem;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, sans-serif; background: var(--white); color: var(--navy-900); line-height: 1.6; overflow-x: hidden; }
+        h1,h2,h3,h4,h5,h6 { font-weight: 700; line-height: 1.3; letter-spacing: -0.02em; }
+        a { text-decoration: none; color: inherit; }
+        button { cursor: pointer; font-family: inherit; border: none; outline: none; }
+        .container { max-width: 1280px; margin: 0 auto; padding: 0 1.25rem; }
+        .navbar { background: var(--white); border-bottom: 1px solid var(--navy-100); position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-sm); }
+        .navbar-inner { display: flex; align-items: center; justify-content: space-between; height: 70px; gap: 1rem; }
+        .logo { font-size: 1.75rem; font-weight: 800; color: var(--navy-900); letter-spacing: -0.5px; cursor: pointer; }
+        .logo span { color: var(--gold-500); }
+        .nav-links { display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; }
+        .nav-link { padding: 0.5rem 0.75rem; border-radius: var(--radius-md); font-size: 0.875rem; font-weight: 500; color: var(--navy-700); transition: all 0.2s; white-space: nowrap; cursor: pointer; }
+        .nav-link:hover { background: var(--navy-50); color: var(--navy-900); }
+        .nav-link.active { background: var(--navy-800); color: var(--white); }
+        .login-btn { background: var(--gold-500); color: var(--white); padding: 0.5rem 1.25rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.875rem; white-space: nowrap; }
+        .login-btn:hover { background: var(--gold-600); }
+        .hamburger { display: none; flex-direction: column; gap: 4px; background: none; padding: 0.5rem; }
+        .hamburger span { width: 25px; height: 2.5px; background: var(--navy-900); border-radius: 2px; }
+        .mobile-menu { display: none; background: var(--white); border-top: 1px solid var(--navy-100); padding: 1rem; max-height: 70vh; overflow-y: auto; }
+        .mobile-menu.open { display: block; }
+        .mobile-nav-link { display: block; padding: 0.75rem 1rem; border-radius: var(--radius-md); font-weight: 500; color: var(--navy-700); cursor: pointer; }
+        .mobile-nav-link:hover { background: var(--navy-50); }
+        .hero { background: linear-gradient(135deg, #102a43 0%, #243b53 50%, #334e68 100%); color: var(--white); padding: 4rem 0 5rem; position: relative; overflow: hidden; }
+        .hero::before { content: ''; position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%); border-radius: 50%; }
+        .hero-content { position: relative; z-index: 1; max-width: 800px; }
+        .hero h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1rem; letter-spacing: -1px; }
+        .hero p { font-size: 1.25rem; color: var(--navy-200); margin-bottom: 2rem; max-width: 600px; }
+        .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: var(--radius-md); font-weight: 600; font-size: 1rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+        .btn-gold { background: var(--gold-500); color: var(--white); }
+        .btn-gold:hover { background: var(--gold-600); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .btn-outline { background: transparent; color: var(--white); border: 2px solid var(--navy-400); }
+        .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: var(--white); }
+        .btn-navy { background: var(--navy-800); color: var(--white); }
+        .btn-navy:hover { background: var(--navy-900); }
+        .search-bar { display: flex; gap: 0.5rem; background: var(--white); padding: 0.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); max-width: 600px; }
+        .search-bar input { flex: 1; border: none; outline: none; font-size: 1rem; padding: 0.5rem 0.75rem; color: var(--navy-900); min-width: 0; }
+        .search-bar button { background: var(--navy-800); color: var(--white); padding: 0.5rem 1.5rem; border-radius: var(--radius-md); font-weight: 600; }
+        .section { padding: 3.5rem 0; }
+        .section-alt { background: var(--gray-50); }
+        .section-title { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--navy-900); }
+        .section-subtitle { color: var(--gray-500); margin-bottom: 2rem; font-size: 1.1rem; }
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+        .card { background: var(--white); border: 1px solid var(--navy-100); border-radius: var(--radius-xl); padding: 1.5rem; box-shadow: var(--shadow-sm); transition: all 0.3s; cursor: pointer; }
+        .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); border-color: var(--navy-200); }
+        .card-icon { width: 48px; height: 48px; border-radius: var(--radius-lg); background: var(--navy-50); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; font-size: 1.5rem; }
+        .card h3 { font-size: 1.25rem; margin-bottom: 0.5rem; color: var(--navy-900); }
+        .card p { color: var(--gray-500); font-size: 0.9rem; margin-bottom: 1rem; }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; background: var(--navy-50); color: var(--navy-700); margin: 0.25rem; }
+        .badge-gold { background: var(--gold-100); color: var(--gold-600); }
+        .badge-navy { background: var(--navy-800); color: var(--white); }
+        .tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .tab { padding: 0.5rem 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--navy-200); background: var(--white); font-weight: 500; font-size: 0.9rem; }
+        .tab:hover { background: var(--navy-50); }
+        .tab.active { background: var(--navy-800); color: var(--white); border-color: var(--navy-800); }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s; }
+        .modal { background: var(--white); border-radius: var(--radius-2xl); padding: 2rem; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s; position: relative; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; font-size: 1.5rem; color: var(--gray-500); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: var(--gray-100); }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--navy-700); }
+        .form-input { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--navy-200); border-radius: var(--radius-md); font-size: 1rem; outline: none; font-family: inherit; }
+        .form-input:focus { border-color: var(--navy-500); box-shadow: 0 0 0 3px rgba(51,78,104,0.1); }
+        .option { display: block; padding: 0.75rem 1rem; border: 1px solid var(--navy-200); border-radius: var(--radius-md); margin-bottom: 0.5rem; cursor: pointer; }
+        .option:hover { background: var(--navy-50); border-color: var(--navy-400); }
+        .option.selected { background: var(--navy-100); border-color: var(--navy-600); font-weight: 500; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-lg); margin-bottom: 1rem; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: var(--radius-lg); }
+        .footer { background: var(--navy-900); color: var(--navy-200); padding: 3rem 0 2rem; margin-top: 3rem; }
+        .footer h4 { color: var(--white); margin-bottom: 1rem; font-size: 1.1rem; }
+        .footer a { color: var(--navy-300); display: block; margin-bottom: 0.5rem; cursor: pointer; }
+        .footer a:hover { color: var(--white); }
+        .hidden { display: none !important; }
+        .page-content { min-height: 60vh; }
+        .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--navy-900); color: var(--white); padding: 1rem 1.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); z-index: 300; animation: slideUp 0.3s; max-width: 90%; }
+        @media (max-width: 1024px) { .nav-links { display: none; } .hamburger { display: flex; } .hero h1 { font-size: 2.25rem; } }
+        @media (max-width: 640px) { .hero { padding: 3rem 0 4rem; } .hero h1 { font-size: 1.75rem; } .card-grid { grid-template-columns: 1fr; } .section { padding: 2.5rem 0; } .section-title { font-size: 1.5rem; } .search-bar { flex-direction: column; } .search-bar button { width: 100%; } .hero-buttons { flex-direction: column; } .btn { width: 100%; justify-content: center; } .toast { bottom: 1rem; right: 1rem; left: 1rem; } }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--gray-100); }
+        ::-webkit-scrollbar-thumb { background: var(--navy-300); border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-inner">
+            <div class="logo" onclick="navigate('home')">PADHAKU<span>.</span></div>
+            <div class="nav-links" id="navLinks">
+                <a class="nav-link active" data-page="home" onclick="navigate('home')">Home</a>
+                <a class="nav-link" data-page="classes" onclick="navigate('classes')">Classes 1–10</a>
+                <a class="nav-link" data-page="classes11" onclick="navigate('classes11')">Classes 11–12</a>
+                <a class="nav-link" data-page="exams" onclick="navigate('exams')">Competitive Exams</a>
+                <a class="nav-link" data-page="news" onclick="navigate('news')">News</a>
+                <a class="nav-link" data-page="current-affairs" onclick="navigate('current-affairs')">Current Affairs</a>
+                <a class="nav-link" data-page="study-materials" onclick="navigate('study-materials')">Study Materials</a>
+                <a class="nav-link" data-page="tests" onclick="navigate('tests')">Tests & Quizzes</a>
+                <a class="nav-link" data-page="roadmaps" onclick="navigate('roadmaps')">Roadmaps</a>
+                <a class="nav-link" data-page="search" onclick="navigate('search')">🔍 Search</a>
+                <button class="login-btn" onclick="openLogin()">Student Login</button>
+            </div>
+            <button class="hamburger" onclick="toggleMobileMenu()"><span></span><span></span><span></span></button>
+        </div>
+        <div class="mobile-menu" id="mobileMenu">
+            <a class="mobile-nav-link" onclick="navigate('home'); toggleMobileMenu()">Home</a>
+            <a class="mobile-nav-link" onclick="navigate('classes'); toggleMobileMenu()">Classes 1–10</a>
+            <a class="mobile-nav-link" onclick="navigate('classes11'); toggleMobileMenu()">Classes 11–12</a>
+            <a class="mobile-nav-link" onclick="navigate('exams'); toggleMobileMenu()">Competitive Exams</a>
+            <a class="mobile-nav-link" onclick="navigate('news'); toggleMobileMenu()">News</a>
+            <a class="mobile-nav-link" onclick="navigate('current-affairs'); toggleMobileMenu()">Current Affairs</a>
+            <a class="mobile-nav-link" onclick="navigate('study-materials'); toggleMobileMenu()">Study Materials</a>
+            <a class="mobile-nav-link" onclick="navigate('tests'); toggleMobileMenu()">Tests & Quizzes</a>
+            <a class="mobile-nav-link" onclick="navigate('roadmaps'); toggleMobileMenu()">Roadmaps</a>
+            <a class="mobile-nav-link" onclick="navigate('search'); toggleMobileMenu()">🔍 Search</a>
+            <button class="login-btn" style="width:100%; margin-top:0.5rem;" onclick="openLogin(); toggleMobileMenu()">Student Login</button>
+        </div>
+    </nav>
+
+    <main id="mainContent" class="page-content"></main>
+
+    <footer class="footer">
+        <div class="container">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:2rem;">
+                <div>
+                    <h4>PADHAKU</h4>
+                    <p style="color:var(--navy-300); margin-top:0.5rem;">Learn Today. Prepare for Tomorrow.</p>
+                </div>
+                <div>
+                    <h4>Quick Links</h4>
+                    <a onclick="navigate('classes')">Classes 1-10</a>
+                    <a onclick="navigate('classes11')">Classes 11-12</a>
+                    <a onclick="navigate('exams')">Competitive Exams</a>
+                    <a onclick="navigate('roadmaps')">Roadmaps</a>
+                </div>
+                <div>
+                    <h4>Resources</h4>
+                    <a onclick="navigate('study-materials')">Study Materials</a>
+                    <a onclick="navigate('tests')">Tests & Quizzes</a>
+                    <a onclick="navigate('news')">Education News</a>
+                    <a onclick="navigate('current-affairs')">Current Affairs</a>
+                </div>
+                <div>
+                    <h4>Exams</h4>
+                    <a onclick="navigate('exam-detail', 'jee-main')">JEE Main</a>
+                    <a onclick="navigate('exam-detail', 'neet')">NEET</a>
+                    <a onclick="navigate('exam-detail', 'upsc')">UPSC</a>
+                    <a onclick="navigate('exam-detail', 'cuet')">CUET</a>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--navy-700);">
+                <p style="color:var(--navy-400); font-size:0.875rem;">&copy; 2024 PADHAKU. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="modal-overlay hidden" id="loginModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeLogin()">&times;</button>
+            <h2 style="margin-bottom:1.5rem;">Student Login</h2>
+            <div id="loginStep1">
+                <p style="color:var(--gray-500); margin-bottom:1.5rem;">Enter your mobile number to continue</p>
+                <div class="form-group">
+                    <label>Mobile Number</label>
+                    <input type="tel" class="form-input" id="mobileNumber" placeholder="10-digit mobile number" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                </div>
+                <button class="btn btn-gold" style="width:100%;" onclick="sendOTP()">Send OTP</button>
+                <p style="margin-top:1rem; font-size:0.875rem; color:var(--gray-500); text-align:center;">Demo: OTP 123456</p>
+            </div>
+            <div id="loginStep2" class="hidden">
+                <div class="form-group">
+                    <label>Enter OTP</label>
+                    <input type="text" class="form-input" id="otpInput" placeholder="6-digit OTP" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                    <p style="margin-top:0.5rem; font-size:0.875rem; color:var(--gold-600); font-weight:600;">Demo OTP: 123456</p>
+                </div>
+                <button class="btn btn-gold" style="width:100%;" onclick="verifyOTP()">Verify & Login</button>
+                <button class="btn btn-outline" style="width:100%; margin-top:0.5rem; color:var(--navy-700); border-color:var(--navy-200);" onclick="backToStep1()">Back</button>
+            </div>
+            <div id="loginStep3" class="hidden">
+                <div style="text-align:center; padding:2rem 0;">
+                    <div style="font-size:4rem; margin-bottom:1rem;">✅</div>
+                    <h3>Login Successful!</h3>
+                    <button class="btn btn-gold" style="width:100%; margin-top:1rem;" onclick="closeLogin(); navigate('dashboard')">Go to Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast hidden" id="toast"></div>
+
+    <script>
+    // ==================== SUPABASE ====================
+    const SUPABASE_URL = 'https://ozrvpbziwpkfkejafjnm.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_aeCYoS9jRAAqPHIGa6Uz6Q_XY_7l7Lj';
+    const supabaseClient = (window.supabase && typeof window.supabase.createClient === 'function')
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+        : null;
+
+    const defaultSiteSettings = {
+        primary_color: '#102a43', secondary_color: '#243b53', accent_color: '#f59e0b',
+        background_color: '#ffffff', text_color: '#102a43',
+        hero_title: 'Learn Today.\nPrepare for Tomorrow.',
+        hero_subtitle: 'Study materials, video lectures, notes, practice questions, current affairs and preparation roadmaps—all in one place.',
+        hero_button_1: '📚 Explore Classes', hero_button_2: '🎯 Competitive Exams',
+        quick_access_title: 'Quick Access', materials_title: 'Latest Study Materials',
+        roadmaps_title: 'Popular Roadmaps', news_title: 'Education News'
+    };
+    let siteSettings = { ...defaultSiteSettings };
+
+    // ==================== DATA ====================
+    let classes = [
+        { id: 1, name: 'Class 1', subjects: ['Mathematics', 'English', 'EVS', 'Hindi'] },
+        { id: 2, name: 'Class 2', subjects: ['Mathematics', 'English', 'EVS', 'Hindi'] },
+        { id: 3, name: 'Class 3', subjects: ['Mathematics', 'English', 'EVS', 'Hindi'] },
+        { id: 4, name: 'Class 4', subjects: ['Mathematics', 'English', 'Science', 'Hindi'] },
+        { id: 5, name: 'Class 5', subjects: ['Mathematics', 'English', 'Science', 'Hindi'] },
+        { id: 6, name: 'Class 6', subjects: ['Mathematics', 'Science', 'Social Science', 'English', 'Hindi'] },
+        { id: 7, name: 'Class 7', subjects: ['Mathematics', 'Science', 'Social Science', 'English', 'Hindi'] },
+        { id: 8, name: 'Class 8', subjects: ['Mathematics', 'Science', 'Social Science', 'English', 'Hindi'] },
+        { id: 9, name: 'Class 9', subjects: ['Mathematics', 'Science', 'Social Science', 'English', 'Hindi'] },
+        { id: 10, name: 'Class 10', subjects: ['Mathematics', 'Science', 'Social Science', 'English', 'Hindi'] }
+    ];
+
+    let streams11 = [
+        { name: 'Science', subjects: ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'English'] },
+        { name: 'Commerce', subjects: ['Accountancy', 'Business Studies', 'Economics', 'Mathematics', 'English'] },
+        { name: 'Humanities / Arts', subjects: ['History', 'Political Science', 'Geography', 'Economics', 'Sociology', 'Psychology', 'English'] }
+    ];
+
+    const exams = [
+        { id: 'jee-main', name: 'JEE Main', category: 'Engineering', description: 'Joint Entrance Examination Main for admission to NITs, IIITs, and other engineering colleges' },
+        { id: 'jee-advanced', name: 'JEE Advanced', category: 'Engineering', description: 'Joint Entrance Examination Advanced for admission to IITs' },
+        { id: 'neet', name: 'NEET', category: 'Medical', description: 'National Eligibility cum Entrance Test for medical colleges across India' },
+        { id: 'upsc', name: 'UPSC', category: 'Civil Services', description: 'Union Public Service Commission Civil Services Examination' },
+        { id: 'cuet', name: 'CUET', category: 'University', description: 'Common University Entrance Test for central universities' },
+        { id: 'nda', name: 'NDA', category: 'Defence', description: 'National Defence Academy Examination' },
+        { id: 'ssc', name: 'SSC', category: 'Government', description: 'Staff Selection Commission Examinations' },
+        { id: 'banking', name: 'Banking', category: 'Government', description: 'Banking exams including IBPS, SBI PO, and Clerk' },
+        { id: 'clat', name: 'CLAT', category: 'Law', description: 'Common Law Admission Test for NLUs' }
+    ];
+
+    let chapters = {
+        'Mathematics': ['Algebra', 'Geometry', 'Trigonometry', 'Calculus', 'Statistics', 'Probability', 'Number System', 'Coordinate Geometry'],
+        'Science': ['Physics', 'Chemistry', 'Biology', 'Environment'],
+        'Physics': ['Mechanics', 'Thermodynamics', 'Optics', 'Electromagnetism', 'Modern Physics', 'Waves'],
+        'Chemistry': ['Organic Chemistry', 'Inorganic Chemistry', 'Physical Chemistry', 'Biochemistry'],
+        'Biology': ['Cell Biology', 'Genetics', 'Human Physiology', 'Plant Physiology', 'Ecology'],
+        'English': ['Grammar', 'Comprehension', 'Writing Skills', 'Literature', 'Vocabulary'],
+        'Hindi': ['Grammar', 'Comprehension', 'Writing Skills', 'Literature'],
+        'Social Science': ['History', 'Geography', 'Civics', 'Economics'],
+        'EVS': ['Environment', 'Plants', 'Animals', 'Water', 'Air'],
+        'Accountancy': ['Financial Accounting', 'Cost Accounting', 'Management Accounting'],
+        'Business Studies': ['Management', 'Marketing', 'Finance', 'Human Resources'],
+        'Economics': ['Microeconomics', 'Macroeconomics', 'Indian Economy', 'Development Economics'],
+        'History': ['Ancient India', 'Medieval India', 'Modern India', 'World History'],
+        'Political Science': ['Constitution', 'Governance', 'International Relations'],
+        'Geography': ['Physical Geography', 'Indian Geography', 'World Geography'],
+        'Sociology': ['Social Structure', 'Social Change', 'Research Methods'],
+        'Psychology': ['Introduction', 'Development', 'Abnormal Psychology', 'Social Psychology']
+    };
+
+    let resources = [];
+    let newsItems = [];
+    let currentAffairs = [];
+    let roadmaps = [];
+    let tests = [];
+
+    // ==================== STATE ====================
+    let currentPage = 'home';
+    let currentUser = JSON.parse(localStorage.getItem('padhaku_user') || 'null');
+    let currentTest = null;
+    let testTimer = null;
+    let testTimeLeft = 0;
+    let userAnswers = [];
+    let savedResources = JSON.parse(localStorage.getItem('padhaku_saved') || '[]');
+    let recentlyViewed = JSON.parse(localStorage.getItem('padhaku_recent') || '[]');
+    let testHistory = JSON.parse(localStorage.getItem('padhaku_testHistory') || '[]');
+    let completedChapters = JSON.parse(localStorage.getItem('padhaku_completed') || '[]');
+
+    // ==================== SUPABASE LOADERS ====================
+    async function loadSiteSettings() {
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient.from('site_settings').select('settings').eq('id', 1).maybeSingle();
+            if (error) throw error;
+            const s = data?.settings || {};
+            siteSettings = { ...defaultSiteSettings, ...s };
+            const root = document.documentElement.style;
+            if (s.primary_color) root.setProperty('--navy-900', s.primary_color);
+            if (s.secondary_color) root.setProperty('--navy-800', s.secondary_color);
+            if (s.accent_color) { root.setProperty('--gold-500', s.accent_color); root.setProperty('--gold-600', s.accent_color); }
+            if (s.background_color) { root.setProperty('--white', s.background_color); root.setProperty('--navy-50', s.background_color); root.setProperty('--gray-50', s.background_color); }
+            return true;
+        } catch (error) { console.warn('Site settings:', error.message); return false; }
+    }
+    async function loadAcademicStructure() {
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient
+                .from('site_settings')
+                .select('settings')
+                .eq('id', 1)
+                .maybeSingle();
+
+            if (error) throw error;
+
+            const structure = data?.settings?.academic_structure;
+            if (!structure) return false;
+
+            if (Array.isArray(structure.classes) && structure.classes.length) {
+                classes.length = 0;
+
+                structure.classes.forEach((c, i) => {
+                    const subjects = Array.isArray(c.subjects)
+                        ? c.subjects.map(s => (
+                            typeof s === 'string'
+                                ? { name: s, chapters: [] }
+                                : {
+                                    name: s?.name || '',
+                                    chapters: Array.isArray(s?.chapters) ? s.chapters : []
+                                }
+                          )).filter(s => s.name)
+                        : [];
+
+                    classes.push({
+                        id: c.id ?? i + 1,
+                        name: c.name || `Class ${i + 1}`,
+                        subjects
+                    });
+
+                    subjects.forEach(s => {
+                        if (s.name && s.chapters.length) {
+                            chapters[s.name] = [...s.chapters];
+                        }
+                    });
+                });
+            }
+
+            if (Array.isArray(structure.streams) && structure.streams.length) {
+                streams11.length = 0;
+                structure.streams.forEach(s => {
+                    streams11.push({
+                        name: s.name,
+                        subjects: (s.subjects || [])
+                            .map(x => typeof x === 'string' ? x : (x?.name || ''))
+                            .filter(Boolean)
+                    });
+                });
+            }
+
+            return true;
+        } catch (error) {
+            console.warn('Academic structure:', error.message);
+            return false;
+        }
+    }
+
+    async function loadNewsFromSupabase() {
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient.from('news').select('*').eq('published', true).order('published_date', { ascending: false });
+            if (error) throw error;
+            newsItems = (data || []).map(item => ({
+                id: item.id, title: item.title || 'Untitled',
+                category: item.category || 'General',
+                date: item.published_date || item.date || '',
+                description: item.description || '',
+                image_url: item.image_url || '',
+                article_url: item.article_url || ''
+            }));
+            return true;
+        } catch (e) { console.error('News:', e.message); return false; }
+    }
+
+    async function loadMaterialsFromSupabase() {
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient.from('materials').select('*').eq('published', true);
+            if (error) throw error;
+            resources = (data || []).map(item => ({
+                id: item.id, title: item.title || 'Untitled',
+                class: item.class || null, stream: item.stream || null,
+                subject: item.subject || '', chapter: item.chapter || null,
+                type: item.type || 'Notes', difficulty: item.difficulty || 'Medium',
+                tags: Array.isArray(item.tags) ? item.tags : [],
+                url: item.resource_url || item.url || '#',
+                resource_url: item.resource_url || '',
+                description: item.description || '',
+                thumbnail_url: item.thumbnail_url || '',
+                youtube_url: item.youtube_url || '',
+                download_url: item.download_url || ''
+            }));
+            return true;
+        } catch (e) { console.error('Materials:', e.message); return false; }
+    }
+
+    async function loadVideosFromSupabase() {
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient.from('videos').select('*').eq('published', true);
+            if (error) throw error;
+            const videos = (data || []).map(item => ({
+                id: `video-${item.id}`, title: item.title || 'Untitled Video',
+                class: item.class || null, stream: item.stream || null,
+                subject: item.subject || '', chapter: item.chapter || null,
+                type: 'Video', difficulty: item.difficulty || 'Medium',
+                tags: [], url: item.youtube_url || item.resource_url || '#',
+                resource_url: item.resource_url || '',
+                description: item.description || '',
+                thumbnail_url: item.thumbnail_url || '',
+                youtube_url: item.youtube_url || '',
+                download_url: item.download_url || ''
+            }));
+            resources = [...resources, ...videos];
+            return true;
+        } catch (e) { console.error('Videos:', e.message); return false; }
+    }
+
+    async function loadCurrentAffairsFromSupabase() {
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient.from('current_affairs').select('*').eq('published', true).order('date', { ascending: false });
+            if (error) throw error;
+            currentAffairs = (data || []).map(item => ({
+                id: item.id, title: item.title || 'Untitled',
+                type: item.type || 'Daily', topic: item.topic || 'General',
+                description: item.description || '', date: item.date || '',
+                resource_url: item.resource_url || '',
+                image_url: item.image_url || ''
+            }));
+            return true;
+        } catch (e) { console.error('CA:', e.message); return false; }
+    }
+
+    async function loadRoadmapsFromSupabase() {
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient.from('roadmaps').select('*').eq('published', true);
+            if (error) throw error;
+            const publishedRoadmaps = data || [];
+            const roadmapIds = publishedRoadmaps.map(r => r.id);
+            let steps = [];
+            if (roadmapIds.length) {
+                const { data: sd, error: se } = await supabaseClient.from('roadmap_steps').select('*').in('roadmap_id', roadmapIds).order('step_order', { ascending: true });
+                if (se) throw se;
+                steps = sd || [];
+            }
+            roadmaps = publishedRoadmaps.map(item => ({
+                id: item.id,
+                name: item.exam_name || item.name || 'Untitled',
+                duration: item.duration || '',
+                difficulty: item.difficulty || 'Medium',
+                description: item.description || '',
+                diagram_url: item.diagram_url || '',
+                steps: steps.filter(s => String(s.roadmap_id) === String(item.id)).map(s => ({
+                    month: s.month || '', title: s.title || '',
+                    subjects: Array.isArray(s.subjects) ? s.subjects : [],
+                    topics: Array.isArray(s.topics) ? s.topics : []
+                }))
+            }));
+            return true;
+        } catch (e) { console.error('Roadmaps:', e.message); return false; }
+    }
+
+    async function loadTestsFromSupabase() {
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient.from('tests').select('*').eq('published', true);
+            if (error) throw error;
+            const publishedTests = data || [];
+            const testIds = publishedTests.map(t => t.id);
+            let questions = [];
+            if (testIds.length) {
+                const { data: qd, error: qe } = await supabaseClient.from('test_questions').select('*').in('test_id', testIds).order('question_order', { ascending: true });
+                if (qe) throw qe;
+                questions = qd || [];
+            }
+            tests = publishedTests.map(item => ({
+                id: item.id, title: item.title || 'Untitled',
+                class: item.class || null, subject: item.subject || '',
+                duration: Number(item.duration) || 30,
+                description: item.description || '',
+                questions: questions.filter(q => String(q.test_id) === String(item.id)).map(q => ({
+                    q: q.question || '',
+                    options: [q.option_a || '', q.option_b || '', q.option_c || '', q.option_d || ''],
+                    answer: ({ A: 0, B: 1, C: 2, D: 3 }[String(q.correct_answer || 'A').toUpperCase()] ?? 0),
+                    explanation: q.explanation || ''
+                }))
+            })).filter(t => t.questions.length > 0);
+            return true;
+        } catch (e) { console.error('Tests:', e.message); return false; }
+    }
+
+    async function loadAllPublicData() {
+        if (!supabaseClient) return;
+        await loadMaterialsFromSupabase();
+        await loadVideosFromSupabase();
+        await loadNewsFromSupabase();
+        await loadCurrentAffairsFromSupabase();
+        await loadRoadmapsFromSupabase();
+        await loadTestsFromSupabase();
+    }
+
+    // ==================== NAVIGATION ====================
+    function navigate(page, param = null) {
+        currentPage = page;
+        window.scrollTo(0, 0);
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.remove('active');
+            if (link.dataset.page === page) link.classList.add('active');
+        });
+        const mainContent = document.getElementById('mainContent');
+        switch(page) {
+            case 'home': renderHome(mainContent); break;
+            case 'classes': renderClasses(mainContent); break;
+            case 'class-detail': renderClassDetail(mainContent, param); break;
+            case 'subject-detail': renderSubjectDetail(mainContent, param); break;
+            case 'chapter-detail': renderChapterDetail(mainContent, param); break;
+            case 'classes11': renderClasses11(mainContent); break;
+            case 'stream-detail': renderStreamDetail(mainContent, param); break;
+            case 'exams': renderExams(mainContent); break;
+            case 'exam-detail': renderExamDetail(mainContent, param); break;
+            case 'study-materials': renderStudyMaterials(mainContent); break;
+            case 'tests': renderTests(mainContent); break;
+            case 'test-take': renderTestTake(mainContent, param); break;
+            case 'news': renderNews(mainContent); break;
+            case 'current-affairs': renderCurrentAffairs(mainContent); break;
+            case 'roadmaps': renderRoadmaps(mainContent); break;
+            case 'roadmap-detail': renderRoadmapDetail(mainContent, param); break;
+            case 'search': renderSearch(mainContent); break;
+            case 'dashboard': renderDashboard(mainContent); break;
+            default: renderHome(mainContent);
+        }
+    }
+
+    function toggleMobileMenu() { document.getElementById('mobileMenu').classList.toggle('open'); }
+
+    // ==================== HELPERS ====================
+    function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+    function getYouTubeEmbedUrl(url) {
+        if (!url) return null;
+
+        try {
+            const value = String(url).trim();
+            const parsed = new URL(value);
+            const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+            let videoId = '';
+
+            if (host === 'youtu.be') {
+                videoId = parsed.pathname.split('/').filter(Boolean)[0] || '';
+            } else if (host === 'youtube.com' || host === 'm.youtube.com') {
+                if (parsed.pathname === '/watch') {
+                    videoId = parsed.searchParams.get('v') || '';
+                } else if (parsed.pathname.startsWith('/shorts/')) {
+                    videoId = parsed.pathname.split('/').filter(Boolean)[1] || '';
+                } else if (parsed.pathname.startsWith('/embed/')) {
+                    videoId = parsed.pathname.split('/').filter(Boolean)[1] || '';
+                } else if (parsed.pathname.startsWith('/live/')) {
+                    videoId = parsed.pathname.split('/').filter(Boolean)[1] || '';
+                }
+            }
+
+            videoId = String(videoId).split(/[?&#/]/)[0];
+            if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) return null;
+
+            return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}?rel=0&modestbranding=1`;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // ==================== HOME ====================
+    function renderHome(container) {
+        container.innerHTML = `
+            <section class="hero">
+                <div class="container hero-content">
+                    <h1>${siteSettings.hero_title.split('\n').join('<br>')}</h1>
+                    <p>${siteSettings.hero_subtitle}</p>
+                    <div class="hero-buttons">
+                        <button class="btn btn-gold" onclick="navigate('classes')">${siteSettings.hero_button_1}</button>
+                        <button class="btn btn-outline" onclick="navigate('exams')">${siteSettings.hero_button_2}</button>
+                    </div>
+                    <div class="search-bar">
+                        <input type="text" placeholder="Search notes, videos, subjects, exams..." id="heroSearchInput" onkeypress="if(event.key==='Enter') performSearch()">
+                        <button onclick="performSearch()">🔍 Search</button>
+                    </div>
+                </div>
+            </section>
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">${siteSettings.quick_access_title}</h2>
+                    <p class="section-subtitle">Start your learning journey with our comprehensive resources</p>
+                    <div class="card-grid">${quickAccessCards()}</div>
+                </div>
+            </section>
+            <section class="section section-alt">
+                <div class="container">
+                    <h2 class="section-title">${siteSettings.materials_title}</h2>
+                    <p class="section-subtitle">Recently added resources for your preparation</p>
+                    <div class="card-grid">${resources.slice(0, 6).map(r => resourceCard(r)).join('') || '<p style="color:var(--gray-500);">No materials available yet.</p>'}</div>
+                    <div style="text-align:center; margin-top:2rem;">
+                        <button class="btn btn-navy" onclick="navigate('study-materials')">View All Materials →</button>
+                    </div>
+                </div>
+            </section>
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">${siteSettings.roadmaps_title}</h2>
+                    <p class="section-subtitle">Structured preparation plans for top competitive exams</p>
+                    <div class="card-grid">${roadmaps.slice(0, 5).map(r => roadmapCard(r)).join('') || '<p style="color:var(--gray-500);">No roadmaps available yet.</p>'}</div>
+                    <div style="text-align:center; margin-top:2rem;">
+                        <button class="btn btn-navy" onclick="navigate('roadmaps')">View All Roadmaps →</button>
+                    </div>
+                </div>
+            </section>
+            <section class="section section-alt">
+                <div class="container">
+                    <h2 class="section-title">${siteSettings.news_title}</h2>
+                    <p class="section-subtitle">Latest updates from the education sector</p>
+                    <div class="card-grid">${newsItems.slice(0, 3).map(n => newsCard(n)).join('') || '<p style="color:var(--gray-500);">No news available yet.</p>'}</div>
+                    <div style="text-align:center; margin-top:2rem;">
+                        <button class="btn btn-navy" onclick="navigate('news')">View All News →</button>
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    function quickAccessCards() {
+        const cards = [
+            { title: 'Classes 1–5', icon: '📚', desc: 'Foundation learning', page: 'classes' },
+            { title: 'Classes 6–10', icon: '🎯', desc: 'Strong academic concepts', page: 'classes' },
+            { title: 'Classes 11–12', icon: '🏆', desc: 'Stream-wise learning', page: 'classes11' },
+            { title: 'Competitive Exams', icon: '🎪', desc: 'JEE, NEET, UPSC, CUET', page: 'exams' },
+            { title: 'Current Affairs', icon: '📰', desc: 'Daily, weekly updates', page: 'current-affairs' },
+            { title: 'Tests & Quizzes', icon: '✍️', desc: 'Practice and assess', page: 'tests' }
+        ];
+        return cards.map(c => `<div class="card" onclick="navigate('${c.page}')"><div class="card-icon">${c.icon}</div><h3>${c.title}</h3><p>${c.desc}</p><span style="color:var(--gold-600); font-weight:600;">Explore →</span></div>`).join('');
+    }
+
+    function resourceCard(r) {
+        const typeColors = { 'Notes':'badge-navy','PDF':'badge-gold','DPP':'badge-navy','Video':'badge-gold','PYQ':'badge-navy','MCQ':'badge-gold','Test':'badge-navy','Revision Sheet':'badge-gold' };
+        return `
+            <div class="card" onclick="viewResource('${esc(r.id)}')">
+                ${r.thumbnail_url ? `<img src="${esc(r.thumbnail_url)}" style="width:100%;height:160px;object-fit:cover;border-radius:var(--radius-lg);margin-bottom:0.75rem;" onerror="this.style.display='none'">` : ''}
+                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                    <span class="badge ${typeColors[r.type] || 'badge-navy'}">${esc(r.type)}</span>
+                    <span class="badge">${esc(r.difficulty || 'Medium')}</span>
+                </div>
+                <h3 style="font-size:1.1rem;">${esc(r.title)}</h3>
+                <p style="font-size:0.875rem; color:var(--gray-500); margin-bottom:0.75rem;">
+                    ${r.class ? esc(r.class) + ' • ' : ''}${esc(r.subject || '')}${r.chapter ? ' • ' + esc(r.chapter) : ''}
+                </p>
+                <button class="btn btn-gold" style="padding:0.5rem 1rem; font-size:0.875rem; width:100%;" onclick="event.stopPropagation(); viewResource('${esc(r.id)}')">View/Open</button>
+            </div>
+        `;
+    }
+
+    function roadmapCard(r) {
+        return `
+            <div class="card" onclick="navigate('roadmap-detail', '${esc(r.id)}')">
+                <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                    <h3>${esc(r.name)}</h3>
+                    <span class="badge badge-gold">${esc(r.difficulty)}</span>
+                </div>
+                <p style="font-size:0.9rem;">${esc(r.description)}</p>
+                <p style="font-size:0.875rem; color:var(--gray-500); margin-top:0.75rem;">⏱ ${esc(r.duration)}</p>
+                <button class="btn btn-gold" style="padding:0.5rem 1rem; font-size:0.875rem; margin-top:1rem; width:100%;">Start Roadmap →</button>
+            </div>
+        `;
+    }
+
+    function newsCard(n) {
+        return `
+            <div class="card">
+                ${n.image_url ? `<img src="${esc(n.image_url)}" alt="${esc(n.title)}" style="width:100%;height:160px;object-fit:cover;border-radius:var(--radius-lg);margin-bottom:0.75rem;" onerror="this.style.display='none'">` : ''}
+                <span class="badge badge-gold">${esc(n.category)}</span>
+                <h3 style="margin-top:0.75rem; font-size:1.05rem;">${esc(n.title)}</h3>
+                <p style="font-size:0.9rem;">${esc(n.description)}</p>
+                <p style="font-size:0.875rem; color:var(--gray-500); margin-top:0.5rem;">📅 ${esc(n.date)}</p>
+                ${n.article_url ? `<a href="${esc(n.article_url)}" target="_blank" rel="noopener" style="color:var(--gold-600);font-weight:600;font-size:0.875rem;display:inline-block;margin-top:0.5rem;">Read more →</a>` : ''}
+            </div>
+        `;
+    }
+
+    // ==================== CLASSES ====================
+    function renderClasses(container) {
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">Classes 1–10</h2>
+                    <p class="section-subtitle">Select your class to access subjects and chapter-wise resources</p>
+                    <div class="card-grid">
+                        ${classes.map(c => `
+                            <div class="card" onclick="navigate('class-detail', ${JSON.stringify(c.id)})">
+                                <div class="card-icon">📖</div>
+                                <h3>${esc(c.name)}</h3>
+                                <p>${c.subjects.length} Subjects</p>
+                                <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.75rem;">
+                                    ${c.subjects.slice(0,3).map(s => {
+                                        const name = typeof s === 'string' ? s : s.name;
+                                        return `<span class="badge">${esc(name)}</span>`;
+                                    }).join('')}
+                                    ${c.subjects.length > 3 ? `<span class="badge">+${c.subjects.length - 3} more</span>` : ''}
+                                </div>
+                                <span style="color:var(--gold-600);font-weight:600;">View Subjects →</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+    function renderClassDetail(container, classId) {
+        const classData = classes.find(c => String(c.id) === String(classId));
+        if (!classData) {
+            container.innerHTML = '<div class="section"><div class="container"><p>Class not found.</p></div></div>';
+            return;
+        }
+
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <button class="btn btn-navy" style="margin-bottom:1.5rem;" onclick="navigate('classes')">← Back to Classes</button>
+                    <h2 class="section-title">${esc(classData.name)}</h2>
+                    <p class="section-subtitle">Select a subject to view chapters and chapter-specific resources</p>
+
+                    <div class="card-grid">
+                        ${classData.subjects.map(rawSubject => {
+                            const subject = typeof rawSubject === 'string'
+                                ? { name: rawSubject, chapters: [] }
+                                : rawSubject;
+
+                            const configured = Array.isArray(subject.chapters) ? subject.chapters : [];
+                            const dynamic = resources
+                                .filter(r =>
+                                    String(r.class || '') === String(classData.name || '') &&
+                                    String(r.subject || '') === String(subject.name || '') &&
+                                    r.chapter
+                                )
+                                .map(r => r.chapter);
+
+                            const chapterCount = [...new Set([...configured, ...dynamic])].length;
+
+                            return `
+                                <div class="card"
+                                     onclick="navigate('subject-detail', ${JSON.stringify(String(classData.id) + '|' + encodeURIComponent(subject.name))})">
+                                    <div class="card-icon">📚</div>
+                                    <h3>${esc(subject.name)}</h3>
+                                    <p>${chapterCount} Chapters • ${
+                                        resources.filter(r =>
+                                            String(r.class || '') === String(classData.name || '') &&
+                                            String(r.subject || '') === String(subject.name || '')
+                                        ).length
+                                    } Resources</p>
+                                    <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.75rem;">
+                                        ${[...new Set([...configured, ...dynamic])].slice(0,3)
+                                            .map(ch => `<span class="badge">${esc(ch)}</span>`).join('')}
+                                    </div>
+                                    <span style="color:var(--gold-600);font-weight:600;">View Chapters →</span>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+    function renderSubjectDetail(container, param) {
+        const parts = String(param || '').split('|');
+        const classId = parts[0];
+        const subjectName = decodeURIComponent(parts.slice(1).join('|'));
+
+        const classData = classes.find(c => String(c.id) === String(classId));
+        if (!classData) {
+            container.innerHTML = '<div class="section"><div class="container"><p>Class not found.</p></div></div>';
+            return;
+        }
+
+        const rawSubject = classData.subjects.find(s =>
+            (typeof s === 'string' ? s : s?.name) === subjectName
+        );
+
+        if (!rawSubject) {
+            container.innerHTML = '<div class="section"><div class="container"><p>Subject not found.</p></div></div>';
+            return;
+        }
+
+        const subject = typeof rawSubject === 'string'
+            ? { name: rawSubject, chapters: [] }
+            : rawSubject;
+
+        const configuredChapters = Array.isArray(subject.chapters) ? subject.chapters : [];
+        const dynamicChapters = resources
+            .filter(r =>
+                String(r.class || '') === String(classData.name || '') &&
+                String(r.subject || '') === String(subject.name || '') &&
+                r.chapter
+            )
+            .map(r => r.chapter);
+
+        const chaptersList = [...new Set([...configuredChapters, ...dynamicChapters])];
+
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <button class="btn btn-navy" style="margin-bottom:1.5rem;"
+                            onclick="navigate('class-detail', ${JSON.stringify(classId)})">
+                        ← Back to ${esc(classData.name)}
+                    </button>
+
+                    <h2 class="section-title">${esc(subject.name)}</h2>
+                    <p class="section-subtitle">
+                        ${esc(classData.name)} • Choose a chapter to see all resources.
+                    </p>
+
+                    <div class="card-grid" style="margin-top:2rem;">
+                        ${chaptersList.length ? chaptersList.map(chapter => {
+                            const count = resources.filter(r =>
+                                String(r.class || '') === String(classData.name || '') &&
+                                String(r.subject || '') === String(subject.name || '') &&
+                                String(r.chapter || '') === String(chapter || '')
+                            ).length;
+
+                            return `
+                                <div class="card"
+                                     onclick="navigate('chapter-detail', ${JSON.stringify(
+                                         encodeURIComponent(JSON.stringify({
+                                             classId: classData.id,
+                                             className: classData.name,
+                                             subject: subject.name,
+                                             chapter
+                                         }))
+                                     )})">
+                                    <div class="card-icon">📖</div>
+                                    <h3>${esc(chapter)}</h3>
+                                    <p>${count} Resource${count === 1 ? '' : 's'}</p>
+                                    <span style="color:var(--gold-600);font-weight:600;">Open Chapter →</span>
+                                </div>
+                            `;
+                        }).join('') : `
+                            <div class="card">
+                                <h3>No chapters yet</h3>
+                                <p>The admin has not added chapters or chapter resources yet.</p>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    function renderChapterDetail(container, encodedParam) {
+        let info;
+
+        try {
+            info = JSON.parse(decodeURIComponent(encodedParam));
+        } catch (error) {
+            container.innerHTML = '<div class="section"><div class="container"><p>Chapter could not be loaded.</p></div></div>';
+            return;
+        }
+
+        const chapterResources = resources.filter(r =>
+            String(r.class || '') === String(info.className || '') &&
+            String(r.subject || '') === String(info.subject || '') &&
+            String(r.chapter || '') === String(info.chapter || '')
+        );
+
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <button class="btn btn-navy" style="margin-bottom:1.5rem;"
+                            onclick="navigate('subject-detail', ${JSON.stringify(
+                                String(info.classId) + '|' + encodeURIComponent(info.subject)
+                            )})">
+                        ← Back to ${esc(info.subject)}
+                    </button>
+
+                    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem;">
+                        <span class="badge">${esc(info.className)}</span>
+                        <span class="badge">${esc(info.subject)}</span>
+                    </div>
+
+                    <h2 class="section-title">${esc(info.chapter)}</h2>
+                    <p class="section-subtitle">
+                        All Notes, DPPs, Videos, PDFs, PYQs, MCQs and Tests for this chapter.
+                    </p>
+
+                    <div class="card-grid" style="margin-top:2rem;">
+                        ${chapterResources.length
+                            ? chapterResources.map(resourceCard).join('')
+                            : `
+                                <div class="card">
+                                    <h3>No resources yet</h3>
+                                    <p>This chapter exists, but the admin has not added any resources yet.</p>
+                                </div>
+                            `}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    function switchTab(btn, tabName) {
+        btn.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        ['chapters', 'resources'].forEach(name => {
+            const el = document.getElementById(name + '-tab');
+            if (el) el.classList.toggle('hidden', name !== tabName);
+        });
+    }
+
+    function markChapterComplete(subject, chapter, classId) {
+        const key = subject + '-' + chapter;
+        if (completedChapters.includes(key)) {
+            completedChapters = completedChapters.filter(c => c !== key);
+            showToast('Chapter marked as incomplete');
+        } else {
+            completedChapters.push(key);
+            showToast('Chapter marked as complete! 🎉');
+        }
+        localStorage.setItem('padhaku_completed', JSON.stringify(completedChapters));
+        renderSubjectDetail(document.getElementById('mainContent'), classId + '-' + subject);
+    }
+
+    // ==================== CLASSES 11-12 ====================
+    function renderClasses11(container) {
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">Classes 11–12</h2>
+                    <p class="section-subtitle">Select your stream to access subjects</p>
+                    <div class="card-grid">
+                        ${streams11.map((s, idx) => `
+                            <div class="card" onclick="navigate('stream-detail', ${idx})">
+                                <div class="card-icon">🎓</div>
+                                <h3>${esc(s.name)}</h3>
+                                <p>${s.subjects.length} Subjects</p>
+                                <div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-bottom:0.75rem;">
+                                    ${s.subjects.slice(0, 3).map(sub => `<span class="badge">${esc(sub)}</span>`).join('')}
+                                    ${s.subjects.length > 3 ? `<span class="badge">+${s.subjects.length - 3} more</span>` : ''}
+                                </div>
+                                <span style="color:var(--gold-600); font-weight:600;">View Subjects →</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    function renderStreamDetail(container, streamIdx) {
+        const stream = streams11[parseInt(streamIdx)];
+        if (!stream) { container.innerHTML = '<p>Stream not found</p>'; return; }
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <button class="btn btn-navy" style="margin-bottom:1.5rem;" onclick="navigate('classes11')">← Back to Streams</button>
+                    <h2 class="section-title">${esc(stream.name)}</h2>
+                    <p class="section-subtitle">Select a subject</p>
+                    <div class="card-grid">
+                        ${stream.subjects.map(s => `
+                            <div class="card" onclick="navigate('subject-detail', '11-${esc(s)}')">
+                                <div class="card-icon">📚</div>
+                                <h3>${esc(s)}</h3>
+                                <p>${chapters[s] ? chapters[s].length + ' Chapters' : 'Study materials'}</p>
+                                <div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-bottom:0.75rem;">
+                                    ${chapters[s] ? chapters[s].slice(0, 3).map(ch => `<span class="badge">${esc(ch)}</span>`).join('') : '<span class="badge">Coming soon</span>'}
+                                </div>
+                                <span style="color:var(--gold-600); font-weight:600;">View Subject →</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    // ==================== EXAMS ====================
+    function renderExams(container) {
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">Competitive Exams</h2>
+                    <p class="section-subtitle">Prepare for top competitive examinations</p>
+                    <div class="card-grid">
+                        ${exams.map(e => `
+                            <div class="card" onclick="navigate('exam-detail', '${e.id}')">
+                                <div class="card-icon">🎯</div>
+                                <h3>${esc(e.name)}</h3>
+                                <p style="font-size:0.9rem;">${esc(e.description)}</p>
+                                <span class="badge badge-gold">${esc(e.category)}</span>
+                                <button class="btn btn-gold" style="padding:0.5rem 1rem; font-size:0.875rem; margin-top:0.75rem; width:100%;">View Details →</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    function renderExamDetail(container, examId) {
+        const exam = exams.find(e => e.id === examId);
+        if (!exam) return;
+        const examRoadmap = roadmaps.find(r => String(r.id) === String(examId));
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <button class="btn btn-navy" style="margin-bottom:1.5rem;" onclick="navigate('exams')">← Back to Exams</button>
+                    <h2 class="section-title">${esc(exam.name)}</h2>
+                    <p class="section-subtitle">${esc(exam.description)}</p>
+                    <div class="card-grid" style="margin-top:2rem;">
+                        <div class="card" onclick="navigate('study-materials')">
+                            <div class="card-icon">📚</div>
+                            <h3>Study Materials</h3>
+                            <p>Notes, PDFs for ${esc(exam.name)}</p>
+                        </div>
+                        <div class="card" onclick="navigate('tests')">
+                            <div class="card-icon">✍️</div>
+                            <h3>Practice Tests</h3>
+                            <p>Mock tests and practice</p>
+                        </div>
+                        ${examRoadmap ? `<div class="card" onclick="navigate('roadmap-detail', '${examRoadmap.id}')">
+                            <div class="card-icon">🗺️</div>
+                            <h3>Preparation Roadmap</h3>
+                            <p>${esc(examRoadmap.duration)} structured plan</p>
+                        </div>` : ''}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    // ==================== STUDY MATERIALS ====================
+    function renderStudyMaterials(container) {
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">Study Materials</h2>
+                    <p class="section-subtitle">Browse and filter resources</p>
+                    <div class="tabs" id="materialFilters">
+                        <button class="tab active" onclick="filterMaterials('all', this)">All (${resources.length})</button>
+                        ${['Notes','PDF','DPP','Video','PYQ','MCQ','Test'].map(t => `<button class="tab" onclick="filterMaterials('${t}', this)">${t}</button>`).join('')}
+                    </div>
+                    <div class="card-grid" id="materialsGrid">
+                        ${resources.map(r => resourceCard(r)).join('') || '<p style="color:var(--gray-500);">No materials yet.</p>'}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    function filterMaterials(type, btn) {
+        document.querySelectorAll('#materialFilters .tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        const filtered = type === 'all' ? resources : resources.filter(r => r.type === type);
+        document.getElementById('materialsGrid').innerHTML = filtered.length > 0 
+            ? filtered.map(r => resourceCard(r)).join('')
+            : '<p>No materials found.</p>';
+    }
+
+    function viewResource(id) {
+        const resource = resources.find(r => String(r.id) === String(id));
+        if (!resource) return;
+        recentlyViewed = [resource, ...recentlyViewed.filter(r => String(r.id) !== String(id))].slice(0, 10);
+        localStorage.setItem('padhaku_recent', JSON.stringify(recentlyViewed));
+
+        const youtubeUrl = resource.youtube_url || (resource.type === 'Video' ? resource.url : '');
+        if (resource.type === 'Video' || youtubeUrl) {
+            const embedUrl = getYouTubeEmbedUrl(youtubeUrl);
+            if (embedUrl) {
+                const modal = document.createElement('div');
+                modal.className = 'modal-overlay';
+                modal.innerHTML = `
+                    <div class="modal" style="max-width:900px; width:96%;">
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">&times;</button>
+                        <h2 style="margin-bottom:1rem; font-size:1.5rem;">${esc(resource.title)}</h2>
+                        <div class="video-container">
+                            <iframe src="${embedUrl}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                        <p style="margin-top:1rem;">${esc(resource.description || '')}</p>
+                        <div style="margin-top:1.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                            <a class="btn btn-gold" href="${esc(youtubeUrl)}" target="_blank" rel="noopener noreferrer">Open on YouTube ↗</a>
+                            ${resource.download_url ? `<a class="btn btn-navy" href="${esc(resource.download_url)}" target="_blank" rel="noopener noreferrer" download>Download</a>` : ''}
+                            <button class="btn btn-outline" style="color:var(--navy-700);border-color:var(--navy-200);" onclick="this.closest('.modal-overlay').remove()">Close</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+                return;
+            }
+            if (youtubeUrl && youtubeUrl !== '#') { window.open(youtubeUrl, '_blank', 'noopener,noreferrer'); return; }
+        }
+
+        const target = resource.download_url || resource.resource_url || resource.url;
+        if (target && target !== '#') window.open(target, '_blank', 'noopener,noreferrer');
+        else showToast('No opening link available for this resource.');
+    }
+
+    function saveResource(id) {
+        const resource = resources.find(r => String(r.id) === String(id));
+        if (!resource) return;
+        if (savedResources.find(r => String(r.id) === String(id))) {
+            savedResources = savedResources.filter(r => String(r.id) !== String(id));
+            showToast('Removed from saved');
+        } else {
+            savedResources.push(resource);
+            showToast('Resource saved! 📌');
+        }
+        localStorage.setItem('padhaku_saved', JSON.stringify(savedResources));
+    }
+
+    // ==================== TESTS ====================
+    function renderTests(container) {
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">Tests & Quizzes</h2>
+                    <p class="section-subtitle">Practice and assess your knowledge</p>
+                    <div class="card-grid">
+                        ${tests.length > 0 ? tests.map(t => `
+                            <div class="card" onclick="navigate('test-take', ${t.id})">
+                                <div class="card-icon">✍️</div>
+                                <h3 style="font-size:1.1rem;">${esc(t.title)}</h3>
+                                <p>${t.questions.length} Questions • ${t.duration} minutes</p>
+                                <div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-bottom:0.75rem;">
+                                    ${t.class ? `<span class="badge">${esc(t.class)}</span>` : ''}
+                                    <span class="badge badge-gold">${esc(t.subject)}</span>
+                                </div>
+                                <button class="btn btn-gold" style="padding:0.5rem 1rem; font-size:0.875rem; width:100%;">Start Test</button>
+                            </div>
+                        `).join('') : '<p style="color:var(--gray-500);">No tests available yet.</p>'}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    function renderTestTake(container, testId) {
+        const test = tests.find(t => String(t.id) === String(testId));
+        if (!test) { container.innerHTML = '<p>Test not found</p>'; return; }
+        currentTest = test;
+        userAnswers = new Array(test.questions.length).fill(null);
+        testTimeLeft = test.duration * 60;
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem;">
+                        <h2 class="section-title" style="margin-bottom:0;">${esc(test.title)}</h2>
+                        <div style="font-size:1.5rem; font-weight:700; color:var(--gold-600);" id="timerDisplay">${formatTime(testTimeLeft)}</div>
+                    </div>
+                    <div id="testQuestions">
+                        ${test.questions.map((q, idx) => `
+                            <div style="background:var(--white);border:1px solid var(--navy-100);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem;">
+                                <h3 style="margin-bottom:1rem; font-size:1.1rem;">Q${idx + 1}. ${esc(q.q)}</h3>
+                                ${q.options.map((opt, optIdx) => `
+                                    <div class="option" id="option-${idx}-${optIdx}" onclick="selectAnswer(${idx}, ${optIdx})">
+                                        <strong>${String.fromCharCode(65 + optIdx)}.</strong> ${esc(opt)}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button class="btn btn-gold" style="width:100%; margin-top:2rem; padding:1rem; font-size:1.1rem;" onclick="submitTest()">Submit Test</button>
+                </div>
+            </section>
+        `;
+        startTimer();
+    }
+
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+        clearInterval(testTimer);
+        testTimer = setInterval(() => {
+            testTimeLeft--;
+            const display = document.getElementById('timerDisplay');
+            if (display) {
+                display.textContent = formatTime(testTimeLeft);
+                if (testTimeLeft <= 60) display.style.color = 'red';
+            }
+            if (testTimeLeft <= 0) { clearInterval(testTimer); submitTest(); }
+        }, 1000);
+    }
+
+    function selectAnswer(qIdx, optIdx) {
+        userAnswers[qIdx] = optIdx;
+        for (let i = 0; i < currentTest.questions[qIdx].options.length; i++) {
+            const opt = document.getElementById(`option-${qIdx}-${i}`);
+            if (opt) opt.classList.remove('selected');
+        }
+        const selected = document.getElementById(`option-${qIdx}-${optIdx}`);
+        if (selected) selected.classList.add('selected');
+    }
+
+    function submitTest() {
+        clearInterval(testTimer);
+        let score = 0;
+        const results = currentTest.questions.map((q, idx) => {
+            const isCorrect = userAnswers[idx] === q.answer;
+            if (isCorrect) score++;
+            return { question: q.q, userAnswer: userAnswers[idx], correctAnswer: q.answer, isCorrect, explanation: q.explanation, options: q.options };
+        });
+        const percentage = (score / currentTest.questions.length) * 100;
+        testHistory.push({ testId: currentTest.id, title: currentTest.title, score, total: currentTest.questions.length, percentage, date: new Date().toISOString() });
+        localStorage.setItem('padhaku_testHistory', JSON.stringify(testHistory));
+        const container = document.getElementById('mainContent');
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <div class="card" style="text-align:center; max-width:700px; margin:0 auto;">
+                        <div style="font-size:4rem; margin-bottom:1rem;">${percentage >= 60 ? '🎉' : '📚'}</div>
+                        <h2 class="section-title">Test Complete!</h2>
+                        <p style="font-size:1.25rem; margin:1rem 0;">Score: ${score}/${currentTest.questions.length}</p>
+                        <p style="font-size:2.5rem; font-weight:800; color:${percentage >= 60 ? 'green' : percentage >= 40 ? 'orange' : 'red'}; margin-bottom:2rem;">${percentage.toFixed(1)}%</p>
+                        <h3 style="margin-bottom:1.5rem; text-align:left;">Detailed Results</h3>
+                        ${results.map((r, idx) => `
+                            <div style="text-align:left; padding:1.25rem; border:1px solid ${r.isCorrect ? '#10b981' : '#ef4444'}; border-radius:var(--radius-lg); margin-bottom:1rem;">
+                                <p style="font-weight:700; margin-bottom:0.5rem;">Q${idx + 1}. ${esc(r.question)}</p>
+                                <div style="margin-bottom:0.75rem;">
+                                    ${r.options.map((opt, optIdx) => `
+                                        <div style="padding:0.5rem 0.75rem; margin-bottom:0.25rem; border-radius:0.375rem;
+                                            background:${optIdx === r.correctAnswer ? '#d1fae5' : optIdx === r.userAnswer && !r.isCorrect ? '#fee2e2' : 'transparent'};
+                                            border:1px solid ${optIdx === r.correctAnswer ? '#10b981' : optIdx === r.userAnswer && !r.isCorrect ? '#ef4444' : 'transparent'};">
+                                            <strong>${String.fromCharCode(65 + optIdx)}.</strong> ${esc(opt)}
+                                            ${optIdx === r.correctAnswer ? ' ✓' : ''}
+                                            ${optIdx === r.userAnswer && !r.isCorrect ? ' ✗ (Your answer)' : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <p style="color:${r.isCorrect ? 'green' : 'red'}; font-weight:600; margin-bottom:0.5rem;">${r.isCorrect ? '✓ Correct' : '✗ Incorrect'}</p>
+                                <p style="font-size:0.875rem; color:var(--gray-500); background:var(--gray-50); padding:0.75rem; border-radius:0.375rem;"><strong>Explanation:</strong> ${esc(r.explanation)}</p>
+                            </div>
+                        `).join('')}
+                        <div style="display:flex; gap:0.5rem; margin-top:1.5rem; flex-wrap:wrap;">
+                            <button class="btn btn-gold" onclick="navigate('tests')">Back to Tests</button>
+                            <button class="btn btn-navy" onclick="navigate('dashboard')">View Dashboard</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    // ==================== NEWS & CURRENT AFFAIRS ====================
+    function renderNews(container) {
+        const categories = ['All', 'Board Exams', 'Exam Notifications', 'Admissions', 'Scholarships', 'Government Updates', 'College Admissions'];
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">Education News</h2>
+                    <p class="section-subtitle">Latest updates from the education sector</p>
+                    <div class="tabs">
+                        ${categories.map((cat, idx) => `<button class="tab ${idx === 0 ? 'active' : ''}" onclick="filterNews('${cat}', this)">${cat}</button>`).join('')}
+                    </div>
+                    <div class="card-grid" id="newsGrid">
+                        ${newsItems.map(n => newsCard(n)).join('') || '<p style="color:var(--gray-500);">No news available yet.</p>'}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    function filterNews(category, btn) {
+        const filtered = category === 'All' ? newsItems : newsItems.filter(n => n.category === category);
+        document.getElementById('newsGrid').innerHTML = filtered.map(n => newsCard(n)).join('') || '<p>No news found.</p>';
+        btn.closest('.tabs').querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+    }
+
+    function renderCurrentAffairs(container) {
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">Current Affairs</h2>
+                    <p class="section-subtitle">Stay updated with daily, weekly, and monthly current affairs</p>
+                    <div class="card-grid">
+                        ${currentAffairs.length > 0 ? currentAffairs.map(ca => `
+                            <div class="card" ${ca.resource_url ? `onclick="window.open('${esc(ca.resource_url)}','_blank','noopener')"` : ''}>
+                                ${ca.image_url ? `<img src="${esc(ca.image_url)}" style="width:100%;height:150px;object-fit:cover;border-radius:var(--radius-lg);margin-bottom:0.75rem;" onerror="this.style.display='none'">` : ''}
+                                <span class="badge ${ca.type === 'Daily' ? 'badge-navy' : 'badge-gold'}">${esc(ca.type)}</span>
+                                <h3 style="margin-top:0.75rem; font-size:1.1rem;">${esc(ca.title)}</h3>
+                                <p style="font-size:0.9rem;">${esc(ca.description)}</p>
+                                <p style="font-size:0.875rem; color:var(--gray-500); margin-top:0.5rem;">🏷️ ${esc(ca.topic)} • 📅 ${esc(ca.date)}</p>
+                            </div>
+                        `).join('') : '<p style="color:var(--gray-500);">No current affairs yet.</p>'}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    // ==================== ROADMAPS ====================
+    function renderRoadmaps(container) {
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">Preparation Roadmaps</h2>
+                    <p class="section-subtitle">Structured study plans for competitive exams</p>
+                    <div class="card-grid">
+                        ${roadmaps.length > 0 ? roadmaps.map(r => roadmapCard(r)).join('') : '<p style="color:var(--gray-500);">No roadmaps yet.</p>'}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    function renderRoadmapDetail(container, roadmapId) {
+        const roadmap = roadmaps.find(r => String(r.id) === String(roadmapId));
+        if (!roadmap) { container.innerHTML = '<p>Roadmap not found</p>'; return; }
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <button class="btn btn-navy" style="margin-bottom:1.5rem;" onclick="navigate('roadmaps')">← Back to Roadmaps</button>
+                    <h2 class="section-title">${esc(roadmap.name)} Roadmap</h2>
+                    <p class="section-subtitle">${esc(roadmap.description)}</p>
+                    <div style="display:flex; gap:1rem; margin-bottom:2rem; flex-wrap:wrap;">
+                        <span class="badge badge-gold">Difficulty: ${esc(roadmap.difficulty)}</span>
+                        <span class="badge badge-navy">Duration: ${esc(roadmap.duration)}</span>
+                        <span class="badge">${roadmap.steps.length} Phases</span>
+                    </div>
+                    ${roadmap.diagram_url ? `<img src="${esc(roadmap.diagram_url)}" style="max-width:100%;border-radius:var(--radius-lg);margin-bottom:2rem;" onerror="this.style.display='none'">` : ''}
+                    <div style="display:flex; flex-direction:column; gap:1.5rem;">
+                        ${roadmap.steps.map((step, idx) => `
+                            <div class="card" style="display:flex; gap:1.5rem; align-items:start;">
+                                <div style="background:var(--gold-500); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">${idx + 1}</div>
+                                <div style="flex:1;">
+                                    <h3 style="color:var(--gold-600); font-size:1rem;">${esc(step.month)}</h3>
+                                    <h4 style="margin:0.5rem 0; font-size:1.2rem;">${esc(step.title)}</h4>
+                                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;">
+                                        ${step.subjects.map(s => `<span class="badge">${esc(s)}</span>`).join('')}
+                                    </div>
+                                    <p style="font-size:0.9rem; color:var(--gray-500);"><strong>Topics:</strong> ${step.topics.map(t => esc(t)).join(', ')}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    // ==================== SEARCH ====================
+    function renderSearch(container) {
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">Search</h2>
+                    <p class="section-subtitle">Search across notes, videos, subjects, exams</p>
+                    <div class="search-bar" style="margin-bottom:2rem; border:2px solid var(--navy-200);">
+                        <input type="text" placeholder="Try 'Class 11 Economics' or 'JEE Physics'" id="searchInput" onkeypress="if(event.key==='Enter') performSearch()">
+                        <button onclick="performSearch()">🔍 Search</button>
+                    </div>
+                    <div id="searchResults"><p style="color:var(--gray-500);">Start typing to search...</p></div>
+                </div>
+            </section>
+        `;
+        setTimeout(() => document.getElementById('searchInput')?.focus(), 100);
+    }
+
+    function performSearch() {
+        const query = (document.getElementById('heroSearchInput')?.value || document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+        if (!query) { showToast('Enter a search term'); return; }
+        const results = [];
+        resources.forEach(r => {
+            const text = `${r.title} ${r.class || ''} ${r.subject || ''} ${r.chapter || ''} ${(r.tags || []).join(' ')}`.toLowerCase();
+            if (text.includes(query)) results.push({ type: 'Resource', title: r.title, subtitle: `${r.type} • ${r.subject} • ${r.class || ''}`, action: `viewResource('${esc(r.id)}')` });
+        });
+        classes.forEach(c => {
+            if (c.name.toLowerCase().includes(query)) results.push({ type: 'Class', title: c.name, subtitle: c.subjects.join(', '), action: `navigate('class-detail', '${c.id}')` });
+            c.subjects.forEach(s => {
+                if (s.toLowerCase().includes(query)) results.push({ type: 'Subject', title: s, subtitle: c.name, action: `navigate('subject-detail', '${c.id}-${esc(s)}')` });
+            });
+        });
+        streams11.forEach((stream, idx) => {
+            if (stream.name.toLowerCase().includes(query)) results.push({ type: 'Stream', title: stream.name, subtitle: stream.subjects.join(', '), action: `navigate('stream-detail', ${idx})` });
+            stream.subjects.forEach(s => {
+                if (s.toLowerCase().includes(query)) results.push({ type: 'Subject', title: s, subtitle: stream.name, action: `navigate('subject-detail', '11-${esc(s)}')` });
+            });
+        });
+        exams.forEach(e => {
+            if (e.name.toLowerCase().includes(query) || e.category.toLowerCase().includes(query)) results.push({ type: 'Exam', title: e.name, subtitle: e.description, action: `navigate('exam-detail', '${e.id}')` });
+        });
+        roadmaps.forEach(r => {
+            if (r.name.toLowerCase().includes(query)) results.push({ type: 'Roadmap', title: r.name, subtitle: r.description, action: `navigate('roadmap-detail', '${r.id}')` });
+        });
+        newsItems.forEach(n => {
+            if (n.title.toLowerCase().includes(query) || n.category.toLowerCase().includes(query)) results.push({ type: 'News', title: n.title, subtitle: n.category, action: `navigate('news')` });
+        });
+        const rc = document.getElementById('searchResults');
+        if (rc) {
+            rc.innerHTML = results.length === 0
+                ? '<p style="color:var(--gray-500);">No results found.</p>'
+                : `<h3 style="margin-bottom:1rem;">${results.length} Results</h3>
+                   <div class="card-grid">${results.slice(0, 20).map(res => `
+                       <div class="card" onclick="${res.action}">
+                           <span class="badge badge-gold">${res.type}</span>
+                           <h3 style="margin-top:0.75rem; font-size:1.1rem;">${esc(res.title)}</h3>
+                           <p style="font-size:0.9rem;">${esc(res.subtitle)}</p>
+                       </div>`).join('')}</div>`;
+        }
+    }
+
+    // ==================== AUTH ====================
+    function openLogin() {
+        if (currentUser) { navigate('dashboard'); return; }
+        document.getElementById('loginModal').classList.remove('hidden');
+        document.getElementById('loginStep1').classList.remove('hidden');
+        document.getElementById('loginStep2').classList.add('hidden');
+        document.getElementById('loginStep3').classList.add('hidden');
+    }
+
+    function closeLogin() { document.getElementById('loginModal').classList.add('hidden'); }
+
+    function sendOTP() {
+        const mobile = document.getElementById('mobileNumber').value;
+        if (mobile.length !== 10) { showToast('Enter valid 10-digit mobile'); return; }
+        document.getElementById('loginStep1').classList.add('hidden');
+        document.getElementById('loginStep2').classList.remove('hidden');
+        showToast('OTP sent! Demo: 123456');
+    }
+
+    function verifyOTP() {
+        const otp = document.getElementById('otpInput').value;
+        const mobile = document.getElementById('mobileNumber').value;
+        if (otp === '123456') {
+            currentUser = { mobile, name: 'Student', joinedAt: new Date().toISOString() };
+            localStorage.setItem('padhaku_user', JSON.stringify(currentUser));
+            document.getElementById('loginStep2').classList.add('hidden');
+            document.getElementById('loginStep3').classList.remove('hidden');
+            showToast('Login successful! 🎉');
+            setTimeout(() => { closeLogin(); navigate('dashboard'); }, 1500);
+        } else {
+            showToast('Invalid OTP. Use: 123456');
+        }
+    }
+
+    function backToStep1() {
+        document.getElementById('loginStep2').classList.add('hidden');
+        document.getElementById('loginStep1').classList.remove('hidden');
+    }
+
+    function logout() {
+        currentUser = null;
+        localStorage.removeItem('padhaku_user');
+        navigate('home');
+        showToast('Logged out');
+    }
+
+    // ==================== DASHBOARD ====================
+    function renderDashboard(container) {
+        if (!currentUser) { openLogin(); return; }
+        container.innerHTML = `
+            <section class="section">
+                <div class="container">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:1rem;">
+                        <div>
+                            <h2 class="section-title">Student Dashboard</h2>
+                            <p class="section-subtitle">Welcome back! Here's your progress</p>
+                        </div>
+                        <button class="btn btn-outline" style="color:var(--navy-700); border-color:var(--navy-200);" onclick="logout()">Logout</button>
+                    </div>
+                    <div class="card-grid" style="margin-bottom:2rem;">
+                        <div class="card" style="text-align:center;"><div style="font-size:2.5rem;">🔥</div><h3>Study Streak</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">3 Days</p></div>
+                        <div class="card" style="text-align:center;"><div style="font-size:2.5rem;">✅</div><h3>Completed</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">${completedChapters.length}</p></div>
+                        <div class="card" style="text-align:center;"><div style="font-size:2.5rem;">📊</div><h3>Tests Taken</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">${testHistory.length}</p></div>
+                        <div class="card" style="text-align:center;"><div style="font-size:2.5rem;">📌</div><h3>Saved</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">${savedResources.length}</p></div>
+                    </div>
+                    <h3 style="margin-bottom:1rem;">Recent Activity</h3>
+                    <div class="card-grid" style="margin-bottom:2rem;">
+                        ${recentlyViewed.slice(0, 5).map(r => resourceCard(r)).join('') || '<p style="color:var(--gray-500);">No recent activity.</p>'}
+                    </div>
+                    <h3 style="margin-bottom:1rem;">Test History</h3>
+                    <div class="card-grid">
+                        ${testHistory.slice(0, 5).map(t => `
+                            <div class="card">
+                                <h4 style="font-size:1.1rem;">${esc(t.title)}</h4>
+                                <p style="font-size:1.5rem; font-weight:700; color:${t.percentage >= 60 ? 'green' : t.percentage >= 40 ? 'orange' : 'red'}; margin:0.5rem 0;">${t.percentage.toFixed(1)}%</p>
+                                <p>Score: ${t.score}/${t.total}</p>
+                            </div>
+                        `).join('') || '<p style="color:var(--gray-500);">No tests yet.</p>'}
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    // ==================== TOAST ====================
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.classList.remove('hidden');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+    // ==================== INIT ====================
+    document.getElementById('loginModal').addEventListener('click', function(e) {
+        if (e.target === this) closeLogin();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeLogin();
+            document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+        }
+    });
+
+    async function initializeApp() {
+        console.log('🚀 Initializing PADHAKU...');
+        await loadSiteSettings();
+        await loadAcademicStructure();
+        await loadAllPublicData();
+        console.log('✅ Loaded:', { classes: classes.length, resources: resources.length, news: newsItems.length, ca: currentAffairs.length, roadmaps: roadmaps.length, tests: tests.length });
+        renderHome(document.getElementById('mainContent'));
+    }
+
+    initializeApp();
+    </script>
+</body>
+</html>
