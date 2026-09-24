@@ -1,0 +1,2614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PADHAKU Admin Panel</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <style>
+        :root {
+            --navy-900: #102a43; --navy-800: #243b53; --navy-700: #334e68;
+            --navy-600: #486581; --navy-500: #627d98; --navy-400: #829ab1;
+            --navy-300: #9fb3c8; --navy-200: #bcccdc; --navy-100: #d9e2ec;
+            --navy-50: #f0f4f8; --gold-500: #f59e0b; --gold-600: #d97706;
+            --gold-100: #fef3c7; --white: #ffffff; --gray-50: #f9fafb;
+            --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db;
+            --gray-500: #6b7280; --gray-700: #374151; --red-500: #ef4444;
+            --red-100: #fee2e2; --green-500: #10b981; --green-100: #d1fae5;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+            --radius-sm: 0.375rem; --radius-md: 0.5rem;
+            --radius-lg: 0.75rem; --radius-xl: 1rem;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--gray-50); color: var(--navy-900); line-height: 1.6; overflow-x: hidden; }
+        h1,h2,h3,h4,h5,h6 { font-weight: 700; line-height: 1.3; letter-spacing: -0.02em; }
+        button { cursor: pointer; font-family: inherit; border: none; outline: none; }
+        input, select, textarea { font-family: inherit; outline: none; }
+
+        .login-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-800) 100%); padding: 1rem; }
+        .login-card { background: var(--white); border-radius: var(--radius-xl); padding: 2.5rem; max-width: 400px; width: 100%; box-shadow: var(--shadow-xl); }
+        .login-logo { text-align: center; margin-bottom: 2rem; }
+        .login-logo h1 { font-size: 2rem; color: var(--navy-900); }
+        .login-logo span { color: var(--gold-500); }
+        .login-logo p { color: var(--gray-500); font-size: 0.9rem; }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--navy-700); font-size: 0.9rem; }
+        .form-input { width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--navy-200); border-radius: var(--radius-md); font-size: 1rem; transition: all 0.2s; }
+        .form-input:focus { border-color: var(--navy-500); box-shadow: 0 0 0 3px rgba(51,78,104,0.1); }
+        .btn { padding: 0.75rem 1.5rem; border-radius: var(--radius-md); font-weight: 600; font-size: 0.9rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background: var(--navy-800); color: var(--white); }
+        .btn-primary:hover { background: var(--navy-900); }
+        .btn-gold { background: var(--gold-500); color: var(--white); }
+        .btn-gold:hover { background: var(--gold-600); }
+        .btn-danger { background: var(--red-500); color: var(--white); }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-outline { background: var(--white); color: var(--navy-700); border: 1px solid var(--navy-200); }
+        .btn-outline:hover { background: var(--navy-50); }
+        .btn-sm { padding: 0.5rem 1rem; font-size: 0.8rem; }
+        .btn-block { width: 100%; justify-content: center; }
+
+        .admin-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 250px; background: var(--navy-900); color: var(--white); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; transition: transform 0.3s; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid var(--navy-700); }
+        .sidebar-header h2 { font-size: 1.5rem; color: var(--gold-500); }
+        .sidebar-nav { flex: 1; padding: 1rem 0; overflow-y: auto; }
+        .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem; color: var(--navy-300); transition: all 0.2s; cursor: pointer; font-size: 0.9rem; font-weight: 500; }
+        .sidebar-link:hover { background: var(--navy-800); color: var(--white); }
+        .sidebar-link.active { background: var(--navy-800); color: var(--gold-500); border-left: 3px solid var(--gold-500); }
+        .sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--navy-700); }
+        .main-content { flex: 1; margin-left: 250px; padding: 2rem; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; gap: 1rem; }
+        .topbar h1 { font-size: 1.75rem; }
+        .hamburger { display: none; background: var(--navy-800); color: var(--white); padding: 0.5rem; border-radius: var(--radius-md); font-size: 1.25rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: var(--white); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm); }
+        .stat-card h3 { font-size: 0.9rem; color: var(--gray-500); margin-bottom: 0.5rem; }
+        .stat-card .stat-value { font-size: 2rem; font-weight: 800; color: var(--navy-900); }
+        .card { background: var(--white); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-sm); margin-bottom: 1.5rem; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+        .card-title { font-size: 1.25rem; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 0.75rem; background: var(--navy-50); color: var(--navy-700); font-weight: 600; font-size: 0.875rem; white-space: nowrap; }
+        td { padding: 0.75rem; border-bottom: 1px solid var(--gray-200); font-size: 0.875rem; }
+        tr:hover { background: var(--gray-50); }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+        .badge-published { background: var(--green-100); color: var(--green-500); }
+        .badge-draft { background: var(--gray-100); color: var(--gray-500); }
+        .badge-admin { background: var(--gold-100); color: var(--gold-600); }
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s; }
+        .modal { background: var(--white); border-radius: var(--radius-xl); padding: 2rem; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--navy-900); color: var(--white); padding: 1rem 1.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); z-index: 300; animation: slideUp 0.3s; }
+        .toast-success { background: var(--green-500); }
+        .toast-error { background: var(--red-500); }
+        .hidden { display: none !important; }
+        .role-banner { padding: .75rem 1rem; border-radius: var(--radius-lg); margin-bottom: 1rem; font-size: .9rem; }
+        .role-banner.owner { background: var(--gold-100); color: var(--gold-600); }
+        .role-banner.helper { background: var(--navy-50); color: var(--navy-700); border: 1px solid var(--navy-100); }
+        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 2px solid var(--navy-200); border-top-color: var(--navy-800); border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 1rem; }
+            .hamburger { display: block; }
+            .topbar h1 { font-size: 1.25rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .modal { padding: 1.5rem; margin: 0.5rem; }
+        }
+        .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 90; }
+        .sidebar-overlay.open { display: block; }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <div class="login-logo">
+                <h1>PADHAKU<span>.</span></h1>
+                <p>Admin Panel</p>
+            </div>
+            <div id="loginForm">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" class="form-input" id="loginEmail" placeholder="admin@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" class="form-input" id="loginPassword" placeholder="Enter your password" onkeypress="if(event.key==='Enter') handleLogin()">
+                </div>
+                <div id="loginError" class="hidden" style="color: var(--red-500); margin-bottom: 1rem; font-size: 0.9rem;"></div>
+                <button class="btn btn-gold btn-block" onclick="handleLogin()" id="loginBtn">Login</button>
+            </div>
+            <div id="loginLoading" class="hidden" style="text-align: center; padding: 2rem;">
+                <div class="loading-spinner" style="width: 40px; height: 40px; border-width: 3px;"></div>
+                <p style="margin-top: 1rem; color: var(--gray-500);">Authenticating...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Layout -->
+    <div id="adminLayout" class="admin-layout hidden">
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>PADHAKU Admin</h2>
+                <p style="font-size: 0.8rem; color: var(--navy-300);">Content Management</p>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-link active" data-page="dashboard" onclick="switchPage('dashboard')">📊 Dashboard</div>
+                <div class="sidebar-link" data-page="materials" onclick="switchPage('materials')">📚 Study Materials</div>
+                <div class="sidebar-link" data-page="about" onclick="switchPage('about')">👤 About Padhaku</div>
+                <div class="sidebar-link" data-page="subjects" onclick="switchPage('subjects')">📖 Subjects</div>
+                <div class="sidebar-link" data-page="videos" onclick="switchPage('videos')">🎬 Videos</div>
+                <div class="sidebar-link" data-page="news" onclick="switchPage('news')">📰 News</div>
+                <div class="sidebar-link" data-page="current-affairs" onclick="switchPage('current-affairs')">🌍 Current Affairs</div>
+                <div class="sidebar-link" data-page="tests" onclick="switchPage('tests')">✍️ Tests & Quizzes</div>
+                <div class="sidebar-link" data-page="roadmaps" onclick="switchPage('roadmaps')">🗺️ Roadmaps</div>
+                <div class="sidebar-link" data-page="students" onclick="switchPage('students')">👨‍🎓 Students</div>
+                <div class="sidebar-link" data-page="settings" onclick="switchPage('settings')">⚙️ Settings</div>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-danger btn-block" onclick="handleLogout()">Logout</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="topbar">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+                    <h1 id="pageTitle">Dashboard</h1>
+                </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span id="adminName" style="font-weight: 600; color: var(--navy-700);"></span>
+                </div>
+            </div>
+            <div id="pageContent"></div>
+        </main>
+    </div>
+
+    <div class="toast hidden" id="toast"></div>
+    <div id="modalContainer"></div>
+
+    <script>
+    // ==================== SUPABASE ====================
+    const SUPABASE_URL = 'https://ozrvpbziwpkfkejafjnm.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_aeCYoS9jRAAqPHIGa6Uz6Q_XY_7l7Lj';
+    let supabaseClient = null;
+
+    function initializeSupabase() {
+        try {
+            if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+                throw new Error('Supabase library failed to load.');
+            }
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+                auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
+            });
+            return true;
+        } catch (error) {
+            console.error('Supabase init failed:', error);
+            supabaseClient = null;
+            return false;
+        }
+    }
+    initializeSupabase();
+
+    // ==================== STATE ====================
+    let currentPage = 'dashboard';
+    let currentUser = null;
+    let currentProfile = null;
+
+    // ==================== ROLE / PERMISSIONS ====================
+    const OWNER_ROLE = 'admin';
+    const CONTENT_MANAGER_ROLE = 'content_manager';
+    const CONTENT_MANAGER_PAGES = new Set([
+        'dashboard', 'materials', 'subjects', 'videos', 'news',
+        'current-affairs', 'tests', 'roadmaps'
+    ]);
+    const OWNER_ONLY_PAGES = new Set(['about', 'students', 'settings']);
+
+    function getCurrentRole() {
+        return String(currentProfile?.role || '').trim().toLowerCase();
+    }
+    function isOwner() { return getCurrentRole() === OWNER_ROLE; }
+    function isContentManager() { return getCurrentRole() === CONTENT_MANAGER_ROLE; }
+    function canAccessPage(page) {
+        if (isOwner()) return true;
+        return isContentManager() && CONTENT_MANAGER_PAGES.has(page);
+    }
+
+    const defaultSiteSettings = {
+        primary_color: '#102a43', secondary_color: '#243b53', accent_color: '#f59e0b',
+        background_color: '#ffffff', text_color: '#102a43',
+        hero_title: 'Learn Today.\nPrepare for Tomorrow.',
+        hero_subtitle: 'Study materials, video lectures, notes, practice questions, current affairs and preparation roadmaps—all in one place.',
+        hero_button_1: '📚 Explore Classes', hero_button_2: '🎯 Competitive Exams',
+        quick_access_title: 'Quick Access', materials_title: 'Latest Study Materials',
+        roadmaps_title: 'Popular Roadmaps', news_title: 'Education News',
+        announcement: '', footer_text: 'PADHAKU — Learn. Practice. Succeed.'
+    };
+
+    const defaultSeniorStreams = [
+        { name: 'Science', subjects: ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'English'] },
+        { name: 'Commerce', subjects: ['Accountancy', 'Business Studies', 'Economics', 'Mathematics', 'English'] },
+        { name: 'Humanities / Arts', subjects: ['History', 'Political Science', 'Geography', 'Economics', 'Sociology', 'Psychology', 'English'] }
+    ];
+
+    const defaultStructure = {
+        classes: Array.from({length: 12}, (_, i) => ({
+            id: i + 1,
+            name: `Class ${i+1}`,
+            subjects: [],
+            ...(i >= 10 ? { streams: JSON.parse(JSON.stringify(defaultSeniorStreams)) } : {})
+        })),
+        streams: JSON.parse(JSON.stringify(defaultSeniorStreams))
+    };
+
+    // ==================== HELPERS ====================
+    function esc(v) { return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = 'toast';
+        if (type === 'success') toast.classList.add('toast-success');
+        else if (type === 'error') toast.classList.add('toast-error');
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+    async function getSettings() {
+        const { data, error } = await supabaseClient.from('site_settings').select('settings').eq('id', 1).maybeSingle();
+        if (error) throw error;
+        return { ...defaultSiteSettings, ...(data?.settings || {}) };
+    }
+
+    async function saveSettings(patch) {
+        const current = await getSettings();
+        const next = { ...current, ...patch };
+        const { error } = await supabaseClient.from('site_settings').upsert({ id: 1, settings: next, updated_at: new Date().toISOString() });
+        if (error) throw error;
+        return next;
+    }
+
+    async function getStructure() {
+        const s = await getSettings();
+        return s.academic_structure || JSON.parse(JSON.stringify(defaultStructure));
+    }
+
+    async function saveStructure(structure) {
+        if (isContentManager()) {
+            const { error } = await supabaseClient.rpc('update_academic_structure', {
+                p_structure: structure
+            });
+            if (error) throw error;
+            return;
+        }
+        await saveSettings({ academic_structure: structure });
+    }
+
+    // ==================== AUTH ====================
+    async function checkSession() {
+        if (!supabaseClient) { showLoginError('Auth service failed. Refresh page.'); return; }
+        try {
+            const { data: { session }, error } = await supabaseClient.auth.getSession();
+            if (error) throw error;
+            if (session) await verifyAdmin(session.user);
+        } catch (e) { console.error(e); }
+    }
+
+    async function verifyAdmin(user) {
+        if (!supabaseClient) return false;
+        try {
+            const { data: profile, error } = await supabaseClient.from('profile').select('*').eq('id', user.id).single();
+            if (error) throw error;
+            const role = String(profile?.role || '').trim().toLowerCase();
+            if (profile && (role === OWNER_ROLE || role === CONTENT_MANAGER_ROLE)) {
+                currentUser = user;
+                currentProfile = profile;
+                showAdminPanel();
+                return true;
+            } else {
+                await supabaseClient.auth.signOut();
+                showLoginError('Access denied. This account is not authorized for PADHAKU Admin Panel.');
+                return false;
+            }
+        } catch (e) {
+            console.error(e);
+            await supabaseClient.auth.signOut();
+            showLoginError(e.message || 'Unable to verify admin.');
+            return false;
+        }
+    }
+
+    async function handleLogin() {
+        const errorEl = document.getElementById('loginError');
+        errorEl.classList.add('hidden');
+        if (!supabaseClient) { showLoginError('Auth service not loaded.'); return; }
+        const email = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        if (!email || !password) { showLoginError('Enter email and password'); return; }
+        showLoginLoading(true);
+        try {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            if (data.user) await verifyAdmin(data.user);
+        } catch (e) { showLoginError(e.message || 'Login failed'); }
+        finally { showLoginLoading(false); }
+    }
+
+    async function handleLogout() {
+        try {
+            await supabaseClient.auth.signOut();
+            currentUser = null; currentProfile = null;
+            showLoginScreen();
+            showToast('Logged out', 'success');
+        } catch (e) { showToast('Error logging out', 'error'); }
+    }
+
+    function showLoginScreen() {
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('adminLayout').classList.add('hidden');
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('loginLoading').classList.add('hidden');
+    }
+
+    function showAdminPanel() {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('adminLayout').classList.remove('hidden');
+        const roleLabel = isOwner() ? 'Owner' : 'Content Manager';
+        document.getElementById('adminName').textContent = `${currentProfile?.full_name || currentUser?.email || 'User'} • ${roleLabel}`;
+        applyRoleToSidebar();
+        switchPage('dashboard');
+    }
+
+    function showLoginError(message) {
+        const el = document.getElementById('loginError');
+        el.textContent = message;
+        el.classList.remove('hidden');
+    }
+
+    function showLoginLoading(show) {
+        document.getElementById('loginForm').classList.toggle('hidden', show);
+        document.getElementById('loginLoading').classList.toggle('hidden', !show);
+        document.getElementById('loginBtn').disabled = show;
+    }
+
+    // ==================== SIDEBAR ====================
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('sidebarOverlay').classList.toggle('open');
+    }
+
+    function applyRoleToSidebar() {
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            const page = link.dataset.page;
+            const allowed = canAccessPage(page);
+            link.style.display = allowed ? '' : 'none';
+            link.setAttribute('aria-hidden', allowed ? 'false' : 'true');
+        });
+        const header = document.querySelector('.sidebar-header p');
+        if (header) {
+            header.textContent = isOwner() ? 'Owner • Full Control' : 'Content Manager • Content Only';
+        }
+    }
+
+    function switchPage(page) {
+        if (!canAccessPage(page)) {
+            showToast('You do not have permission to open this section.', 'error');
+            if (page !== 'dashboard') switchPage('dashboard');
+            return;
+        }
+        currentPage = page;
+        applyRoleToSidebar();
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            link.classList.remove('active');
+            if (link.dataset.page === page) link.classList.add('active');
+        });
+        const titles = {
+            'dashboard': 'Dashboard', 'materials': 'Study Materials', 'about': 'About Padhaku',
+            'subjects': 'Subjects', 'videos': 'Videos', 'news': 'News',
+            'current-affairs': 'Current Affairs', 'tests': 'Tests & Quizzes',
+            'roadmaps': 'Roadmaps', 'students': 'Students', 'settings': 'Settings'
+        };
+        document.getElementById('pageTitle').textContent = titles[page] || 'Dashboard';
+        if (window.innerWidth <= 768) toggleSidebar();
+        const content = document.getElementById('pageContent');
+        switch(page) {
+            case 'dashboard': renderDashboard(content); break;
+            case 'materials': renderMaterials(content); break;
+            case 'about': renderAboutPadhaku(content); break;
+            case 'subjects': renderSubjects(content); break;
+            case 'videos': renderVideos(content); break;
+            case 'news': renderNews(content); break;
+            case 'current-affairs': renderCurrentAffairs(content); break;
+            case 'tests': renderTests(content); break;
+            case 'roadmaps': renderRoadmaps(content); break;
+            case 'students': renderStudents(content); break;
+            case 'settings': renderSettings(content); break;
+        }
+    }
+
+    // ==================== DASHBOARD ====================
+    async function renderDashboard(container) {
+        container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="loading-spinner"></div></div>';
+        try {
+            const profileCountPromise = isOwner()
+                ? supabaseClient.from('profile').select('*', { count: 'exact', head: true })
+                : Promise.resolve({ count: null, error: null });
+            const [s, m, v, n, ca, t] = await Promise.all([
+                profileCountPromise,
+                supabaseClient.from('materials').select('*', { count: 'exact', head: true }),
+                supabaseClient.from('videos').select('*', { count: 'exact', head: true }),
+                supabaseClient.from('news').select('*', { count: 'exact', head: true }),
+                supabaseClient.from('current_affairs').select('*', { count: 'exact', head: true }),
+                supabaseClient.from('tests').select('*', { count: 'exact', head: true })
+            ]);
+            container.innerHTML = `
+                <div class="role-banner ${isOwner() ? 'owner' : 'helper'}">
+                    <strong>${isOwner() ? 'Owner access' : 'Content Manager access'}</strong> — ${isOwner() ? 'You have full control over PADHAKU.' : 'You can manage content sections only. Owner-only areas are hidden.'}
+                </div>
+                <div class="stats-grid">
+                    ${isOwner() ? `<div class="stat-card"><h3>Total Users</h3><div class="stat-value">${s.count || 0}</div></div>` : ''}
+                    <div class="stat-card"><h3>Study Materials</h3><div class="stat-value">${m.count || 0}</div></div>
+                    <div class="stat-card"><h3>Videos</h3><div class="stat-value">${v.count || 0}</div></div>
+                    <div class="stat-card"><h3>News</h3><div class="stat-value">${n.count || 0}</div></div>
+                    <div class="stat-card"><h3>Current Affairs</h3><div class="stat-value">${ca.count || 0}</div></div>
+                    <div class="stat-card"><h3>Tests</h3><div class="stat-value">${t.count || 0}</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h2 class="card-title">Quick Actions</h2></div>
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                        <button class="btn btn-gold" onclick="switchPage('materials')">+ Material</button>
+                        <button class="btn btn-primary" onclick="switchPage('videos')">+ Video</button>
+                        <button class="btn btn-primary" onclick="switchPage('news')">+ News</button>
+                        <button class="btn btn-primary" onclick="switchPage('tests')">+ Test</button>
+                        <button class="btn btn-primary" onclick="switchPage('roadmaps')">+ Roadmap</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h2 class="card-title">Signed-in Account</h2></div>
+                    <p><strong>Name:</strong> ${esc(currentProfile?.full_name || 'N/A')}</p>
+                    <p><strong>Email:</strong> ${esc(currentUser?.email || 'N/A')}</p>
+                    <p><strong>Role:</strong> <span class="badge ${isOwner() ? 'badge-admin' : 'badge-published'}">${isOwner() ? 'Owner' : 'Content Manager'}</span></p>
+                    ${isContentManager() ? `<p style="margin-top:.75rem;color:var(--gray-500);">Content-only account. About Padhaku, Students and Website Settings are restricted.</p>` : ''}
+                </div>
+            `;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+        }
+    }
+
+    // ==================== MATERIALS ====================
+    async function renderMaterials(container) {
+        container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="loading-spinner"></div></div>';
+        try {
+            const { data: materials, error } = await supabaseClient.from('materials').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Study Materials (${materials?.length || 0})</h2>
+                        <button class="btn btn-gold" onclick="showMaterialForm()">+ Add Material</button>
+                    </div>
+                    <div style="margin-bottom:1rem;display:flex;gap:0.5rem;flex-wrap:wrap;">
+                        <input type="text" class="form-input" placeholder="Search..." style="flex:1;min-width:200px;" oninput="filterTable('materialsTable', this.value)">
+                    </div>
+                    <div class="table-container">
+                        <table id="materialsTable">
+                            <thead><tr><th>Title</th><th>Class</th><th>Subject</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                ${materials?.length > 0 ? materials.map(m => `
+                                    <tr>
+                                        <td>${esc(m.title)}</td>
+                                        <td>${esc(m.class || '-')}</td>
+                                        <td>${esc(m.subject || '-')}</td>
+                                        <td><span class="badge">${esc(m.type)}</span></td>
+                                        <td><span class="badge ${m.published ? 'badge-published' : 'badge-draft'}">${m.published ? 'Published' : 'Draft'}</span></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm" onclick="showMaterialForm('${m.id}')">Edit</button>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteMaterial('${m.id}')">Delete</button>
+                                        </td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="6" style="text-align:center;">No materials</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+        }
+    }
+
+    function showMaterialForm(materialId = null) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal">
+                <h2 style="margin-bottom:1.5rem;">${materialId ? 'Edit' : 'Add'} Material</h2>
+                <div id="materialFormContent"><div style="text-align:center;padding:2rem;"><div class="loading-spinner"></div></div></div>
+                <div style="display:flex;gap:0.5rem;margin-top:1.5rem;">
+                    <button class="btn btn-primary" onclick="saveMaterial('${materialId || ''}')">Save</button>
+                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.getElementById('modalContainer').appendChild(modal);
+        if (materialId) loadMaterialForEdit(materialId);
+        else document.getElementById('materialFormContent').innerHTML = materialFormHTML();
+    }
+
+    async function loadMaterialForEdit(id) {
+        try {
+            const { data, error } = await supabaseClient.from('materials').select('*').eq('id', id).single();
+            if (error) throw error;
+            document.getElementById('materialFormContent').innerHTML = materialFormHTML(data);
+        } catch (e) { showToast('Error loading: ' + e.message, 'error'); }
+    }
+
+    function materialFormHTML(m = null) {
+        const classOptions = Array.from({length: 12}, (_, i) => `Class ${i+1}`)
+            .map(c => `<option value="${c}" ${m?.class === c ? 'selected' : ''}>${c}</option>`).join('');
+        return `
+            <div class="form-group"><label>Title *</label><input type="text" class="form-input" id="matTitle" value="${esc(m?.title)}"></div>
+            <div class="form-group"><label>Description</label><textarea class="form-input" id="matDescription" rows="3">${esc(m?.description)}</textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="form-group"><label>Class</label><select class="form-input" id="matClass"><option value="">Select</option>${classOptions}</select></div>
+                <div class="form-group"><label>Subject</label><input type="text" class="form-input" id="matSubject" value="${esc(m?.subject)}"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="form-group"><label>Chapter</label><input type="text" class="form-input" id="matChapter" value="${esc(m?.chapter)}"></div>
+                <div class="form-group"><label>Type *</label><select class="form-input" id="matType">${['Notes','PDF','DPP','Video','PYQ','MCQ','Test'].map(t => `<option ${m?.type === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+            </div>
+            ${adminImageField({label:'Thumbnail / Cover Image', inputId:'matThumbnail', value:m?.thumbnail_url, folder:'materials/thumbnails', previewId:'matThumbnailPreview'})}
+            <div class="form-group"><label>YouTube URL</label><input type="url" class="form-input" id="matYoutubeUrl" value="${esc(m?.youtube_url)}" placeholder="https://youtube.com/watch?v=..."></div>
+            <div class="form-group"><label>Direct Download URL</label><input type="url" class="form-input" id="matDownloadUrl" value="${esc(m?.download_url)}" placeholder="Direct file URL"></div>
+            <div class="form-group"><label>Resource URL</label><input type="url" class="form-input" id="matResourceUrl" value="${esc(m?.resource_url)}"></div>
+            <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" id="matPublished" ${m?.published ? 'checked' : ''}> Published</label></div>
+        `;
+    }
+
+    async function saveMaterial(id) {
+        const payload = {
+            title: document.getElementById('matTitle').value.trim(),
+            description: document.getElementById('matDescription').value.trim(),
+            class: document.getElementById('matClass').value,
+            subject: document.getElementById('matSubject').value.trim(),
+            chapter: document.getElementById('matChapter').value.trim(),
+            type: document.getElementById('matType').value,
+            thumbnail_url: document.getElementById('matThumbnail').value.trim(),
+            youtube_url: document.getElementById('matYoutubeUrl').value.trim(),
+            download_url: document.getElementById('matDownloadUrl').value.trim() || null,
+            resource_url: document.getElementById('matResourceUrl').value.trim(),
+            published: document.getElementById('matPublished').checked
+        };
+        if (!payload.title || !payload.type) { showToast('Title & Type required', 'error'); return; }
+        try {
+            let result;
+            if (id) result = await supabaseClient.from('materials').update(payload).eq('id', id);
+            else result = await supabaseClient.from('materials').insert(payload).select();
+            if (result.error) throw result.error;
+            document.querySelector('.modal-overlay')?.remove();
+            showToast('Material saved!', 'success');
+            switchPage('materials');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    async function deleteMaterial(id) {
+        if (!confirm('Delete this material?')) return;
+        try {
+            const { error } = await supabaseClient.from('materials').delete().eq('id', id);
+            if (error) throw error;
+            showToast('Deleted', 'success');
+            switchPage('materials');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    function filterTable(tableId, query) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        const rows = table.getElementsByTagName('tr');
+        for (let i = 1; i < rows.length; i++) {
+            rows[i].style.display = rows[i].textContent.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
+        }
+    }
+
+    // ==================== ABOUT PADHAKU ====================
+
+    const SITE_MEDIA_BUCKET = 'site-media';
+
+    function mediaSafeName(name) {
+        return String(name || 'file')
+            .replace(/[^a-zA-Z0-9._-]+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+    }
+
+    async function uploadSiteMedia(file, folder = 'general') {
+        if (!file) throw new Error('No file selected.');
+        if (!supabaseClient) throw new Error('Supabase client is not ready.');
+
+        const safeName = mediaSafeName(file.name || 'file');
+        const uuid = (crypto && crypto.randomUUID) ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        const path = `${folder}/${Date.now()}-${uuid}-${safeName}`;
+
+        const { error } = await supabaseClient.storage
+            .from(SITE_MEDIA_BUCKET)
+            .upload(path, file, { cacheControl: '3600', upsert: false });
+
+        if (error) throw error;
+
+        const { data } = supabaseClient.storage
+            .from(SITE_MEDIA_BUCKET)
+            .getPublicUrl(path);
+
+        if (!data?.publicUrl) throw new Error('Could not create public file URL.');
+        return data.publicUrl;
+    }
+
+    // Generic image upload used by every image field in the admin panel.
+    // The public URL is written into the matching DB URL field, so the user panel can display it after publish.
+    window.handleAdminImageUpload = async function(input, targetInputId, folder, previewId = null) {
+        const file = input?.files?.[0];
+        if (!file) return;
+        if (!file.type || !file.type.startsWith('image/')) {
+            showToast('Please select an image file.', 'error');
+            input.value = '';
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('Image is too large. Maximum size is 10 MB.', 'error');
+            input.value = '';
+            return;
+        }
+        const target = document.getElementById(targetInputId);
+        if (!target) {
+            showToast('Image field could not be found.', 'error');
+            input.value = '';
+            return;
+        }
+        try {
+            const url = await uploadSiteMedia(file, folder);
+            target.value = url;
+            if (previewId) {
+                const preview = document.getElementById(previewId);
+                if (preview) {
+                    preview.src = url;
+                    preview.style.display = 'block';
+                }
+            }
+            showToast('Image uploaded successfully ✓', 'success');
+        } catch (e) {
+            console.error('Image upload:', e);
+            showToast('Image upload failed: ' + e.message, 'error');
+        } finally {
+            input.value = '';
+        }
+    };
+
+    window.previewAdminImageFromUrl = function(input, previewId) {
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+        const value = String(input?.value || '').trim();
+        if (value) {
+            preview.src = value;
+            preview.style.display = 'block';
+        } else {
+            preview.removeAttribute('src');
+            preview.style.display = 'none';
+        }
+    };
+
+    function adminImageField({ label, inputId, value = '', folder, previewId }) {
+        return `
+            <div class="form-group">
+                <label>${label}</label>
+                <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+                    <input type="url" class="form-input" id="${inputId}" value="${esc(value)}" placeholder="Image URL"
+                        oninput="previewAdminImageFromUrl(this, '${previewId}')">
+                    <label class="btn btn-outline" style="cursor:pointer;white-space:nowrap;">
+                        📷 Upload from Gallery
+                        <input type="file" accept="image/*" style="display:none;"
+                            onchange="handleAdminImageUpload(this, '${inputId}', '${folder}', '${previewId}')">
+                    </label>
+                </div>
+                <img id="${previewId}" src="${esc(value)}" alt="${esc(label)} preview"
+                    style="${value ? '' : 'display:none;'}margin-top:.75rem;max-width:260px;max-height:180px;object-fit:cover;border-radius:12px;border:1px solid var(--navy-100);"
+                    onerror="this.style.display='none'">
+            </div>`;
+    }
+
+    function aboutDefaults(settings) {
+        const about = {
+            owner_name: '',
+            owner_role: 'Founder / Creator, PADHAKU',
+            owner_bio: '',
+            owner_photo_url: '',
+            owner_voice_url: '',
+            owner2_name: 'Divyansh Mishra',
+            owner2_role: 'Co-Founder / Creator, PADHAKU',
+            owner2_bio: '',
+            owner2_photo_url: '',
+            owner2_voice_url: '',
+            owner2_email: '',
+            owner2_phone: '',
+            owner2_instagram_url: '',
+            owner2_youtube_url: '',
+            gallery: [],
+            team: [],
+            contact_email: '',
+            contact_phone: '',
+            instagram_url: '',
+            youtube_channel_url: '',
+            website_note: '',
+            ...(settings.about_padhaku || {})
+        };
+        about.gallery = Array.isArray(about.gallery) ? about.gallery : [];
+        about.team = Array.isArray(about.team) ? about.team : [];
+        return about;
+    }
+
+    function normalizeTeamMember(member = {}, index = 0) {
+        return {
+            id: member.id || `${Date.now()}-${index}-${Math.random().toString(36).slice(2)}`,
+            name: member.name || '',
+            role: member.role || '',
+            bio: member.bio || '',
+            photo_url: member.photo_url || '',
+            voice_url: member.voice_url || '',
+            email: member.email || '',
+            phone: member.phone || '',
+            instagram_url: member.instagram_url || '',
+            linkedin_url: member.linkedin_url || '',
+            youtube_url: member.youtube_url || '',
+            visible: member.visible !== false,
+            order: Number(member.order) || index
+        };
+    }
+
+    async function saveAboutState(about) {
+        await saveSettings({
+            about_padhaku: {
+                ...about,
+                team: (about.team || []).map((m, i) => normalizeTeamMember(m, i))
+            }
+        });
+    }
+
+    window.handleAboutOwnerPhotoUpload = async function(input) {
+        const file = input?.files?.[0];
+        if (!file) return;
+        try {
+            const url = await uploadSiteMedia(file, 'about/owner');
+            const field = document.getElementById('aboutOwnerPhoto');
+            if (field) field.value = url;
+            showToast('Owner photo uploaded.', 'success');
+        } catch (e) {
+            showToast('Photo upload failed: ' + e.message + ' (You can also paste an image URL.)', 'error');
+        } finally { input.value = ''; }
+    };
+
+    window.handleAboutVoiceUpload = async function(input) {
+        const file = input?.files?.[0];
+        if (!file) return;
+        try {
+            const url = await uploadSiteMedia(file, 'about/voice');
+            const field = document.getElementById('aboutOwnerVoice');
+            if (field) field.value = url;
+            showToast('Voice message uploaded.', 'success');
+        } catch (e) {
+            showToast('Voice upload failed: ' + e.message + ' (You can also paste an audio URL.)', 'error');
+        } finally { input.value = ''; }
+    };
+
+    window.handleAboutOwner2PhotoUpload = async function(input) {
+        const file = input?.files?.[0];
+        if (!file) return;
+        try {
+            const url = await uploadSiteMedia(file, 'about/divyansh/photo');
+            const field = document.getElementById('aboutOwner2Photo');
+            if (field) field.value = url;
+            showToast('Divyansh Mishra photo uploaded.', 'success');
+        } catch (e) {
+            showToast('Divyansh photo upload failed: ' + e.message, 'error');
+        } finally { input.value = ''; }
+    };
+
+    window.handleAboutOwner2VoiceUpload = async function(input) {
+        const file = input?.files?.[0];
+        if (!file) return;
+        try {
+            const url = await uploadSiteMedia(file, 'about/divyansh/voice');
+            const field = document.getElementById('aboutOwner2Voice');
+            if (field) field.value = url;
+            showToast('Divyansh Mishra voice uploaded.', 'success');
+        } catch (e) {
+            showToast('Divyansh voice upload failed: ' + e.message, 'error');
+        } finally { input.value = ''; }
+    };
+
+    window.handleAdminMultipleGalleryUpload = async function(input) {
+        const files = Array.from(input?.files || []);
+        if (!files.length) return;
+        try {
+            const settings = await getSettings();
+            const about = aboutDefaults(settings);
+            for (const file of files) {
+                const url = await uploadSiteMedia(file, 'about/gallery');
+                about.gallery.push(url);
+            }
+            await saveAboutState(about);
+            showToast(`${files.length} photo(s) added to gallery.`, 'success');
+            await renderAboutPadhaku(document.getElementById('pageContent'));
+        } catch (e) {
+            showToast('Gallery upload failed: ' + e.message + '. You can add photos individually using image URLs too.', 'error');
+        } finally { input.value = ''; }
+    };
+
+    window.removeAboutGalleryImage = async function(index) {
+        try {
+            const settings = await getSettings();
+            const about = aboutDefaults(settings);
+            about.gallery.splice(index, 1);
+            await saveAboutState(about);
+            showToast('Gallery image removed.', 'success');
+            await renderAboutPadhaku(document.getElementById('pageContent'));
+        } catch (e) { showToast('Could not remove image: ' + e.message, 'error'); }
+    };
+
+    function teamEditorHTML(member, index) {
+        return `
+            <div class="modal-overlay">
+                <div class="modal" style="max-width:780px;max-height:92vh;overflow-y:auto;">
+                    <h2 style="margin-bottom:.5rem;">${index === null ? 'Add' : 'Edit'} Team Member</h2>
+                    <p style="color:var(--gray-500);margin-bottom:1.25rem;">Name, role, bio, photo, voice message and social details manage karo.</p>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group"><label>Name *</label><input class="form-input" id="teamName" value="${esc(member.name)}"></div>
+                        <div class="form-group"><label>Role / Designation *</label><input class="form-input" id="teamRole" value="${esc(member.role)}"></div>
+                    </div>
+                    <div class="form-group"><label>About / Bio</label><textarea class="form-input" id="teamBio" rows="5">${esc(member.bio)}</textarea></div>
+
+                    <div class="form-group">
+                        <label>Profile Photo</label>
+                        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+                            <input type="url" class="form-input" id="teamPhotoUrl" value="${esc(member.photo_url)}" placeholder="Image URL">
+                            <label class="btn btn-outline" style="cursor:pointer;white-space:nowrap;">📷 Upload Photo
+                                <input type="file" accept="image/*" style="display:none;" onchange="uploadTeamPhotoFromGallery(this)">
+                            </label>
+                        </div>
+                        ${member.photo_url ? `<img src="${esc(member.photo_url)}" alt="Team preview" style="margin-top:.75rem;width:110px;height:110px;object-fit:cover;border-radius:14px;border:1px solid var(--navy-100);">` : ''}
+                    </div>
+
+                    <div class="form-group">
+                        <label>Voice / Intro Message</label>
+                        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+                            <input type="url" class="form-input" id="teamVoiceUrl" value="${esc(member.voice_url)}" placeholder="Audio URL">
+                            <label class="btn btn-outline" style="cursor:pointer;white-space:nowrap;">🎙️ Upload Voice
+                                <input type="file" accept="audio/*" style="display:none;" onchange="uploadTeamVoiceFromGallery(this)">
+                            </label>
+                        </div>
+                        ${member.voice_url ? `<audio controls style="width:100%;margin-top:.75rem;"><source src="${esc(member.voice_url)}"></audio>` : ''}
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group"><label>Email</label><input class="form-input" id="teamEmail" value="${esc(member.email)}"></div>
+                        <div class="form-group"><label>Phone</label><input class="form-input" id="teamPhone" value="${esc(member.phone)}"></div>
+                        <div class="form-group"><label>Instagram</label><input type="url" class="form-input" id="teamInstagram" value="${esc(member.instagram_url)}"></div>
+                        <div class="form-group"><label>LinkedIn</label><input type="url" class="form-input" id="teamLinkedin" value="${esc(member.linkedin_url)}"></div>
+                        <div class="form-group"><label>YouTube</label><input type="url" class="form-input" id="teamYoutube" value="${esc(member.youtube_url)}"></div>
+                        <div class="form-group"><label>Display Order</label><input type="number" min="0" class="form-input" id="teamOrder" value="${Number(member.order) || 0}"></div>
+                    </div>
+
+                    <div class="form-group"><label style="display:flex;align-items:center;gap:.5rem;"><input type="checkbox" id="teamVisible" ${member.visible ? 'checked' : ''}> Show on public website</label></div>
+
+                    <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem;">
+                        <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                        <button class="btn btn-gold" onclick="saveTeamMemberDirect(${index === null ? 'null' : index})">${index === null ? 'Add Team Member' : 'Update Team Member'}</button>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    window.uploadTeamPhotoFromGallery = async function(input) {
+        const file = input?.files?.[0]; if (!file) return;
+        try {
+            const url = await uploadSiteMedia(file, 'about/team/photos');
+            document.getElementById('teamPhotoUrl').value = url;
+            showToast('Team photo uploaded.', 'success');
+        } catch (e) { showToast('Team photo upload failed: ' + e.message + ' (paste URL instead if storage is not configured.)', 'error'); }
+        finally { input.value = ''; }
+    };
+
+    window.uploadTeamVoiceFromGallery = async function(input) {
+        const file = input?.files?.[0]; if (!file) return;
+        try {
+            const url = await uploadSiteMedia(file, 'about/team/voice');
+            document.getElementById('teamVoiceUrl').value = url;
+            showToast('Team voice uploaded.', 'success');
+        } catch (e) { showToast('Team voice upload failed: ' + e.message + ' (paste URL instead if storage is not configured.)', 'error'); }
+        finally { input.value = ''; }
+    };
+
+    window.openTeamMemberDirect = async function(index) {
+        try {
+            const settings = await getSettings();
+            const about = aboutDefaults(settings);
+            about.team = about.team.map((m, i) => normalizeTeamMember(m, i));
+            const member = index === null ? normalizeTeamMember({order: about.team.length}, about.team.length) : about.team[index];
+            const holder = document.createElement('div');
+            holder.innerHTML = teamEditorHTML(member, index);
+            document.getElementById('modalContainer').appendChild(holder.firstElementChild);
+        } catch (e) { showToast('Could not open team editor: ' + e.message, 'error'); }
+    };
+
+    window.saveTeamMemberDirect = async function(index) {
+        const name = document.getElementById('teamName').value.trim();
+        const role = document.getElementById('teamRole').value.trim();
+        if (!name || !role) { showToast('Name and Role are required.', 'error'); return; }
+
+        try {
+            const settings = await getSettings();
+            const about = aboutDefaults(settings);
+            about.team = about.team.map((m, i) => normalizeTeamMember(m, i));
+            const old = index === null ? {} : (about.team[index] || {});
+            const member = normalizeTeamMember({
+                ...old,
+                name, role,
+                bio: document.getElementById('teamBio').value.trim(),
+                photo_url: document.getElementById('teamPhotoUrl').value.trim(),
+                voice_url: document.getElementById('teamVoiceUrl').value.trim(),
+                email: document.getElementById('teamEmail').value.trim(),
+                phone: document.getElementById('teamPhone').value.trim(),
+                instagram_url: document.getElementById('teamInstagram').value.trim(),
+                linkedin_url: document.getElementById('teamLinkedin').value.trim(),
+                youtube_url: document.getElementById('teamYoutube').value.trim(),
+                visible: document.getElementById('teamVisible').checked,
+                order: Number(document.getElementById('teamOrder').value) || 0
+            }, index === null ? about.team.length : index);
+
+            if (index === null) about.team.push(member); else about.team[index] = member;
+            about.team.sort((a, b) => a.order - b.order);
+            await saveAboutState(about);
+            document.querySelector('#modalContainer .modal-overlay')?.remove();
+            showToast(index === null ? 'Team member added.' : 'Team member updated.', 'success');
+            await renderAboutPadhaku(document.getElementById('pageContent'));
+        } catch (e) { showToast('Could not save team member: ' + e.message, 'error'); }
+    };
+
+    window.toggleTeamMemberDirect = async function(index) {
+        try {
+            const settings = await getSettings();
+            const about = aboutDefaults(settings);
+            about.team = about.team.map((m, i) => normalizeTeamMember(m, i));
+            if (!about.team[index]) return;
+            about.team[index].visible = !about.team[index].visible;
+            await saveAboutState(about);
+            showToast(about.team[index].visible ? 'Team member shown.' : 'Team member hidden.', 'success');
+            await renderAboutPadhaku(document.getElementById('pageContent'));
+        } catch (e) { showToast('Could not change visibility: ' + e.message, 'error'); }
+    };
+
+    window.deleteTeamMemberDirect = async function(index) {
+        if (!confirm('Delete this team member?')) return;
+        try {
+            const settings = await getSettings();
+            const about = aboutDefaults(settings);
+            about.team = about.team.map((m, i) => normalizeTeamMember(m, i));
+            about.team.splice(index, 1);
+            about.team.forEach((m, i) => m.order = i);
+            await saveAboutState(about);
+            showToast('Team member deleted.', 'success');
+            await renderAboutPadhaku(document.getElementById('pageContent'));
+        } catch (e) { showToast('Could not delete team member: ' + e.message, 'error'); }
+    };
+
+    async function renderAboutPadhaku(container) {
+        if (!isOwner()) {
+            container.innerHTML = '<div class="card"><p style="color:var(--red-500);">Owner-only section.</p></div>';
+            return;
+        }
+        container.innerHTML = '<div class="card"><p>Loading About Padhaku...</p></div>';
+        try {
+            const settings = await getSettings();
+            const about = aboutDefaults(settings);
+            about.team = about.team.map((m, i) => normalizeTeamMember(m, i)).sort((a, b) => a.order - b.order);
+
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">About Padhaku</h2>
+                            <p style="color:var(--gray-500);margin-top:.35rem;">Padhaku, founder/creator aur complete team ki public information yahin manage karo.</p>
+                        </div>
+                    </div>
+
+                    <h3>Founder / Creator</h3>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group"><label>Name</label><input class="form-input" id="aboutOwnerName" value="${esc(about.owner_name)}" placeholder="Your name"></div>
+                        <div class="form-group"><label>Role / Designation</label><input class="form-input" id="aboutOwnerRole" value="${esc(about.owner_role)}"></div>
+                    </div>
+                    <div class="form-group"><label>About You / About Padhaku</label><textarea class="form-input" id="aboutOwnerBio" rows="7" placeholder="Apne baare mein aur PADHAKU ke baare mein likho...">${esc(about.owner_bio)}</textarea></div>
+
+                    <div class="form-group">
+                        <label>Founder Photo</label>
+                        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+                            <input type="url" class="form-input" id="aboutOwnerPhoto" value="${esc(about.owner_photo_url)}" placeholder="Image URL">
+                            <label class="btn btn-outline" style="cursor:pointer;">📷 Upload Photo<input type="file" accept="image/*" style="display:none;" onchange="handleAboutOwnerPhotoUpload(this)"></label>
+                        </div>
+                        ${about.owner_photo_url ? `<img src="${esc(about.owner_photo_url)}" alt="Founder" style="margin-top:.75rem;width:140px;height:140px;object-fit:cover;border-radius:16px;border:1px solid var(--navy-100);">` : ''}
+                    </div>
+
+                    <div class="form-group">
+                        <label>Founder Voice / Message</label>
+                        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+                            <input type="url" class="form-input" id="aboutOwnerVoice" value="${esc(about.owner_voice_url)}" placeholder="Audio URL">
+                            <label class="btn btn-outline" style="cursor:pointer;">🎙️ Upload Voice<input type="file" accept="audio/*" style="display:none;" onchange="handleAboutVoiceUpload(this)"></label>
+                        </div>
+                        ${about.owner_voice_url ? `<audio controls style="width:100%;margin-top:.75rem;"><source src="${esc(about.owner_voice_url)}"></audio>` : ''}
+                    </div>
+
+                    <hr style="margin:2rem 0 1.5rem;border:none;border-top:1px solid var(--navy-100);">
+
+                    <h3>Divyansh Mishra — Head / Co-Creator</h3>
+                    <p style="color:var(--gray-500);margin:.25rem 0 1rem;">
+                        Founder section ke just neeche Divyansh Mishra ki same type ki public information manage karo.
+                    </p>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group"><label>Name</label><input class="form-input" id="aboutOwner2Name" value="${esc(about.owner2_name)}"></div>
+                        <div class="form-group"><label>Role / Designation</label><input class="form-input" id="aboutOwner2Role" value="${esc(about.owner2_role)}"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>About Divyansh / Thoughts</label>
+                        <textarea class="form-input" id="aboutOwner2Bio" rows="7" placeholder="Divyansh ke thoughts aur details...">${esc(about.owner2_bio)}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Divyansh Photo</label>
+                        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+                            <input type="url" class="form-input" id="aboutOwner2Photo" value="${esc(about.owner2_photo_url)}" placeholder="Image URL">
+                            <label class="btn btn-outline" style="cursor:pointer;">📷 Upload Photo<input type="file" accept="image/*" style="display:none;" onchange="handleAboutOwner2PhotoUpload(this)"></label>
+                        </div>
+                        ${about.owner2_photo_url ? `<img src="${esc(about.owner2_photo_url)}" alt="Divyansh Mishra" style="margin-top:.75rem;width:140px;height:140px;object-fit:cover;border-radius:16px;border:1px solid var(--navy-100);">` : ''}
+                    </div>
+                    <div class="form-group">
+                        <label>Divyansh Voice / Message</label>
+                        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+                            <input type="url" class="form-input" id="aboutOwner2Voice" value="${esc(about.owner2_voice_url)}" placeholder="Audio URL">
+                            <label class="btn btn-outline" style="cursor:pointer;">🎙️ Upload Voice<input type="file" accept="audio/*" style="display:none;" onchange="handleAboutOwner2VoiceUpload(this)"></label>
+                        </div>
+                        ${about.owner2_voice_url ? `<audio controls style="width:100%;margin-top:.75rem;"><source src="${esc(about.owner2_voice_url)}"></audio>` : ''}
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group"><label>Email</label><input class="form-input" id="aboutOwner2Email" value="${esc(about.owner2_email)}"></div>
+                        <div class="form-group"><label>Phone</label><input class="form-input" id="aboutOwner2Phone" value="${esc(about.owner2_phone)}"></div>
+                        <div class="form-group"><label>Instagram</label><input class="form-input" id="aboutOwner2Instagram" value="${esc(about.owner2_instagram_url)}"></div>
+                        <div class="form-group"><label>YouTube</label><input class="form-input" id="aboutOwner2Youtube" value="${esc(about.owner2_youtube_url)}"></div>
+                    </div>
+
+                    <hr style="margin:2rem 0;border:none;border-top:1px solid var(--navy-100);">
+
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+                        <div><h3>Team Members</h3><p style="color:var(--gray-500);margin:0;">Team ke har member ka photo, role, bio, voice aur social details manage karo.</p></div>
+                        <button class="btn btn-gold" onclick="openTeamMemberDirect(null)">+ Add Team Member</button>
+                    </div>
+
+                    <div style="display:grid;gap:1rem;margin-top:1rem;">
+                        ${about.team.length ? about.team.map((member, index) => `
+                            <div style="border:1px solid var(--navy-100);border-radius:14px;padding:1rem;background:var(--gray-50);">
+                                <div style="display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+                                    <div style="display:flex;gap:.85rem;align-items:center;min-width:260px;">
+                                        ${member.photo_url ? `<img src="${esc(member.photo_url)}" alt="${esc(member.name)}" style="width:82px;height:82px;border-radius:50%;object-fit:cover;border:1px solid var(--navy-100);">` : `<div style="width:82px;height:82px;border-radius:50%;background:var(--navy-100);display:flex;align-items:center;justify-content:center;font-size:2rem;">👤</div>`}
+                                        <div><div style="font-size:1.1rem;font-weight:700;">${esc(member.name || 'Unnamed')}</div><div style="color:var(--gray-500);">${esc(member.role || 'Team Member')}</div><span class="badge">${member.visible ? 'Visible' : 'Hidden'}</span></div>
+                                    </div>
+                                    <div style="display:flex;gap:.45rem;flex-wrap:wrap;">
+                                        <button class="btn btn-primary btn-sm" onclick="openTeamMemberDirect(${index})">Edit</button>
+                                        <button class="btn btn-outline btn-sm" onclick="toggleTeamMemberDirect(${index})">${member.visible ? 'Hide' : 'Show'}</button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteTeamMemberDirect(${index})">Delete</button>
+                                    </div>
+                                </div>
+                                ${member.bio ? `<p style="margin:.9rem 0 0;white-space:pre-line;">${esc(member.bio)}</p>` : ''}
+                                <div style="display:flex;gap:.45rem;flex-wrap:wrap;margin-top:.8rem;">
+                                    ${member.email ? `<span class="badge">✉ ${esc(member.email)}</span>` : ''}
+                                    ${member.phone ? `<span class="badge">☎ ${esc(member.phone)}</span>` : ''}
+                                    ${member.photo_url ? '<span class="badge">📷 Photo</span>' : ''}
+                                    ${member.voice_url ? '<span class="badge">🎙 Voice</span>' : ''}
+                                </div>
+                            </div>`).join('') : '<div style="padding:1rem;background:var(--gray-50);border-radius:10px;color:var(--gray-500);">No team members yet.</div>'}
+                    </div>
+
+                    <hr style="margin:2rem 0;border:none;border-top:1px solid var(--navy-100);">
+                    <h3>Contact / Social</h3>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group"><label>Email</label><input class="form-input" id="aboutEmail" value="${esc(about.contact_email)}"></div>
+                        <div class="form-group"><label>Phone</label><input class="form-input" id="aboutPhone" value="${esc(about.contact_phone)}"></div>
+                        <div class="form-group"><label>Instagram</label><input type="url" class="form-input" id="aboutInstagram" value="${esc(about.instagram_url)}"></div>
+                        <div class="form-group"><label>YouTube Channel</label><input type="url" class="form-input" id="aboutYoutube" value="${esc(about.youtube_channel_url)}"></div>
+                    </div>
+                    <div class="form-group"><label>Extra Note</label><input class="form-input" id="aboutWebsiteNote" value="${esc(about.website_note)}"></div>
+
+                    <hr style="margin:2rem 0;border:none;border-top:1px solid var(--navy-100);">
+                    <h3>PADHAKU Gallery</h3>
+                    <label class="btn btn-gold" style="cursor:pointer;margin:.5rem 0 1rem;display:inline-flex;">📷 Upload Gallery Photos<input type="file" accept="image/*" multiple style="display:none;" onchange="handleAdminMultipleGalleryUpload(this)"></label>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1rem;">
+                        ${about.gallery.length ? about.gallery.map((url, index) => `<div style="border:1px solid var(--navy-100);border-radius:12px;padding:.5rem;"><img src="${esc(url)}" alt="Gallery ${index+1}" style="width:100%;height:140px;object-fit:cover;border-radius:8px;"><button class="btn btn-danger btn-sm" style="width:100%;margin-top:.5rem;" onclick="removeAboutGalleryImage(${index})">Remove</button></div>`).join('') : '<div style="color:var(--gray-500);padding:1rem;background:var(--gray-50);border-radius:10px;">No gallery photos yet.</div>'}
+                    </div>
+
+                    <button class="btn btn-gold" style="margin-top:1.5rem;" onclick="saveAboutPadhaku()">💾 Save About Padhaku</button>
+                </div>
+            `;
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = `<div class="card"><p style="color:var(--red-500);">Error: ${esc(e.message)}</p></div>`;
+        }
+    }
+
+    window.saveAboutPadhaku = async function() {
+        try {
+            const settings = await getSettings();
+            const about = aboutDefaults(settings);
+            about.owner_name = document.getElementById('aboutOwnerName').value.trim();
+            about.owner_role = document.getElementById('aboutOwnerRole').value.trim();
+            about.owner_bio = document.getElementById('aboutOwnerBio').value.trim();
+            about.owner_photo_url = document.getElementById('aboutOwnerPhoto').value.trim();
+            about.owner_voice_url = document.getElementById('aboutOwnerVoice').value.trim();
+
+            about.owner2_name = document.getElementById('aboutOwner2Name').value.trim();
+            about.owner2_role = document.getElementById('aboutOwner2Role').value.trim();
+            about.owner2_bio = document.getElementById('aboutOwner2Bio').value.trim();
+            about.owner2_photo_url = document.getElementById('aboutOwner2Photo').value.trim();
+            about.owner2_voice_url = document.getElementById('aboutOwner2Voice').value.trim();
+            about.owner2_email = document.getElementById('aboutOwner2Email').value.trim();
+            about.owner2_phone = document.getElementById('aboutOwner2Phone').value.trim();
+            about.owner2_instagram_url = document.getElementById('aboutOwner2Instagram').value.trim();
+            about.owner2_youtube_url = document.getElementById('aboutOwner2Youtube').value.trim();
+
+            about.contact_email = document.getElementById('aboutEmail').value.trim();
+            about.contact_phone = document.getElementById('aboutPhone').value.trim();
+            about.instagram_url = document.getElementById('aboutInstagram').value.trim();
+            about.youtube_channel_url = document.getElementById('aboutYoutube').value.trim();
+            about.website_note = document.getElementById('aboutWebsiteNote').value.trim();
+            await saveAboutState(about);
+            showToast('About Padhaku saved successfully.', 'success');
+            await renderAboutPadhaku(document.getElementById('pageContent'));
+        } catch (e) { showToast('Could not save About Padhaku: ' + e.message, 'error'); }
+    };
+
+    // ==================== SUBJECTS (Classes 1–12 → Subject → Chapter → Resources) ====================
+
+    const subjectManager = {
+        structure: null,
+        materials: [],
+        classIndex: 0,
+        streamIndex: 0
+    };
+
+    function subjectObject(value) {
+        if (typeof value === 'string') return { name: value, chapters: [] };
+        return {
+            name: value?.name || 'Untitled Subject',
+            chapters: Array.isArray(value?.chapters) ? [...value.chapters] : []
+        };
+    }
+
+    function normalizeAcademicStructure(structure) {
+        const working = JSON.parse(JSON.stringify(structure || defaultStructure));
+        working.classes = Array.isArray(working.classes) ? working.classes : [];
+
+        working.classes.forEach((c, index) => {
+            c.id = c.id ?? index + 1;
+            c.name = c.name || `Class ${index + 1}`;
+            c.subjects = Array.isArray(c.subjects)
+                ? c.subjects.map(subjectObject)
+                : [];
+
+            if (Number(c.id) >= 11) {
+                const sourceStreams = Array.isArray(c.streams)
+                    ? c.streams
+                    : (Array.isArray(working.streams) ? working.streams : defaultSeniorStreams);
+
+                c.streams = sourceStreams.map(stream => ({
+                    name: stream?.name || 'Untitled Stream',
+                    subjects: Array.isArray(stream?.subjects)
+                        ? stream.subjects.map(subjectObject)
+                        : []
+                }));
+            }
+        });
+
+        if (!Array.isArray(working.streams)) working.streams = JSON.parse(JSON.stringify(defaultSeniorStreams));
+        return working;
+    }
+
+    async function loadSubjectManager() {
+        const structure = await getStructure();
+        const normalized = normalizeAcademicStructure(structure);
+
+        // PADHAKU always exposes Classes 1–12 from this Subject workspace.
+        // Preserve any existing class names/data and append missing classes.
+        for (let i = normalized.classes.length; i < 12; i++) {
+            normalized.classes.push({ id: i + 1, name: `Class ${i + 1}`, subjects: [] });
+        }
+        let structureChanged = normalized.classes.length !== (structure.classes || []).length;
+
+        const { data, error } = await supabaseClient
+            .from('materials')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        subjectManager.structure = normalized;
+        subjectManager.materials = data || [];
+
+        if (subjectManager.classIndex >= normalized.classes.length) {
+            subjectManager.classIndex = Math.max(0, normalized.classes.length - 1);
+        }
+
+        // Migrate old string subjects into object form once.
+        const needsMigration = (structure.classes || []).some(c =>
+            (c.subjects || []).some(s => typeof s === 'string')
+        );
+
+        if (needsMigration || structureChanged) {
+            await saveStructure(normalized);
+        }
+    }
+
+    function subjectResources(className, subjectName, chapter = null, streamName = null) {
+        return (subjectManager.materials || []).filter(m =>
+            String(m.class || '').trim() === String(className || '').trim() &&
+            String(m.subject || '').trim() === String(subjectName || '').trim() &&
+            (streamName === null || String(m.stream || '').trim() === String(streamName || '').trim()) &&
+            (chapter === null || String(m.chapter || '').trim() === String(chapter || '').trim())
+        );
+    }
+
+    function allChaptersFor(className, subject, streamName = null) {
+        const set = new Set((subject.chapters || []).filter(Boolean).map(v => String(v).trim()));
+        subjectResources(className, subject.name, null, streamName).forEach(resource => {
+            if (resource.chapter) set.add(String(resource.chapter).trim());
+        });
+        return [...set];
+    }
+
+    function isSeniorClass(cls) {
+        return Number(cls?.id) >= 11 || /11|12/.test(String(cls?.name || ''));
+    }
+
+    function getActiveSubjectContext() {
+        const currentClass = subjectManager.structure?.classes?.[subjectManager.classIndex];
+        if (!currentClass) return { currentClass: null, stream: null, subjects: [] };
+
+        if (isSeniorClass(currentClass)) {
+            currentClass.streams = Array.isArray(currentClass.streams) ? currentClass.streams : [];
+            if (subjectManager.streamIndex >= currentClass.streams.length) subjectManager.streamIndex = 0;
+            const stream = currentClass.streams[subjectManager.streamIndex] || null;
+            return { currentClass, stream, subjects: stream?.subjects || [] };
+        }
+
+        currentClass.subjects = Array.isArray(currentClass.subjects) ? currentClass.subjects : [];
+        return { currentClass, stream: null, subjects: currentClass.subjects };
+    }
+
+    function setSeniorStream(index) {
+        subjectManager.streamIndex = Number(index) || 0;
+        subjectManagerRender();
+    }
+
+    function subjectManagerRender() {
+        const container = document.getElementById('pageContent');
+        if (!container) return;
+
+        const classes = subjectManager.structure?.classes || [];
+        if (!classes.length) {
+            container.innerHTML = `<div class="card"><h2 class="card-title">Subjects & Resources</h2>
+                <p style="color:var(--gray-500);margin:1rem 0;">Classes 1–12 will be initialized automatically.</p></div>`;
+            return;
+        }
+
+        const { currentClass, stream, subjects } = getActiveSubjectContext();
+        const senior = isSeniorClass(currentClass);
+
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">Academic Content Manager</h2>
+                        <p style="color:var(--gray-500);margin-top:.35rem;">
+                            ${senior ? 'Class 11–12 → Stream → Subject → Chapter → Resources' : 'Class → Subject → Chapter → Resources'}
+                        </p>
+                    </div>
+                    <button class="btn btn-gold" onclick="subjectAddSubject()">+ Add Subject</button>
+                </div>
+
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem;">
+                    ${classes.map((c,i)=>`<button class="btn ${i===subjectManager.classIndex?'btn-primary':'btn-outline'} btn-sm"
+                        onclick="subjectSelectClass(${i})">${esc(c.name)}</button>`).join('')}
+                </div>
+
+                ${senior ? `
+                    <div style="padding:1rem;background:var(--gold-100);border:1px solid #f6d98a;border-radius:var(--radius-lg);margin-bottom:1rem;">
+                        <div style="font-weight:800;margin-bottom:.65rem;">🎓 ${esc(currentClass.name)} Streams</div>
+                        <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                            ${(currentClass.streams||[]).map((st,i)=>`<button class="btn ${i===subjectManager.streamIndex?'btn-gold':'btn-outline'} btn-sm"
+                                onclick="setSeniorStream(${i})">${esc(st.name)}</button>`).join('')}
+                            <button class="btn btn-outline btn-sm" onclick="subjectAddStream()">+ Add Stream</button>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div style="padding:1rem;background:var(--navy-50);border-radius:var(--radius-lg);margin-bottom:1rem;">
+                    <strong style="font-size:1.15rem;">${esc(currentClass.name)}</strong>
+                    ${stream ? `<span class="badge badge-admin" style="margin-left:.5rem;">${esc(stream.name)}</span>` : ''}
+                    <span class="badge" style="margin-left:.5rem;">${subjects.length} Subjects</span>
+                </div>
+
+                ${subjects.length ? subjects.map((raw, subjectIndex) => {
+                    const subject = subjectObject(raw);
+                    const chapters = allChaptersFor(currentClass.name, subject, stream?.name || null);
+                    return `
+                        <div class="card" style="border:1px solid var(--navy-100);margin-bottom:1rem;">
+                            <div style="display:flex;gap:.75rem;align-items:center;justify-content:space-between;flex-wrap:wrap;">
+                                <div style="display:flex;gap:.6rem;align-items:center;flex:1;min-width:240px;">
+                                    <span style="font-size:1.4rem;">📚</span>
+                                    <input class="form-input" value="${esc(subject.name)}"
+                                        onchange="subjectRenameSubject(${subjectIndex}, this.value)" style="font-weight:700;">
+                                </div>
+                                <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                                    <button class="btn btn-primary btn-sm" onclick="subjectAddChapter(${subjectIndex})">+ Add Chapter</button>
+                                    <button class="btn btn-danger btn-sm" onclick="subjectDeleteSubject(${subjectIndex})">Delete Subject</button>
+                                </div>
+                            </div>
+                            <div style="margin-top:1rem;">
+                                ${chapters.length ? chapters.map(chapter => {
+                                    const rows = subjectResources(currentClass.name, subject.name, chapter, stream?.name || null);
+                                    const summary = {};
+                                    rows.forEach(r => { const type=r.type||'Other'; summary[type]=(summary[type]||0)+1; });
+                                    const summaryText = Object.entries(summary).map(([type,count])=>`${type}: ${count}`).join(' • ');
+                                    return `<div style="border:1px solid var(--navy-100);border-radius:var(--radius-md);padding:1rem;margin:.75rem 0;">
+                                        <div style="display:flex;justify-content:space-between;gap:.75rem;align-items:center;flex-wrap:wrap;">
+                                            <div style="min-width:220px;">
+                                                <div style="font-weight:700;">📖 ${esc(chapter)}</div>
+                                                <div style="font-size:.8rem;color:var(--gray-500);margin-top:.2rem;">${rows.length?esc(summaryText):'No resources yet'}</div>
+                                            </div>
+                                            <div style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                                                <button class="btn btn-gold btn-sm" onclick="subjectAddResource(${subjectIndex}, decodeURIComponent('${encodeURIComponent(chapter)}'))">+ Add Resource</button>
+                                                <button class="btn btn-outline btn-sm" onclick="subjectRenameChapter(${subjectIndex}, decodeURIComponent('${encodeURIComponent(chapter)}'))">Rename</button>
+                                                <button class="btn btn-danger btn-sm" onclick="subjectDeleteChapter(${subjectIndex}, decodeURIComponent('${encodeURIComponent(chapter)}'))">Delete</button>
+                                            </div>
+                                        </div>
+                                        ${rows.length ? `<div style="margin-top:.75rem;display:grid;gap:.45rem;">${rows.map(resource=>`
+                                            <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:.6rem;background:var(--gray-50);border-radius:var(--radius-md);">
+                                                <span class="badge">${esc(resource.type||'Resource')}</span>
+                                                <span style="font-weight:600;flex:1;min-width:180px;">${esc(resource.title)}</span>
+                                                <span class="badge ${resource.published?'badge-published':'badge-draft'}">${resource.published?'Published':'Draft'}</span>
+                                                <button class="btn btn-primary btn-sm" onclick="subjectEditResource('${resource.id}')">Edit</button>
+                                                <button class="btn btn-danger btn-sm" onclick="subjectDeleteResource('${resource.id}')">Delete</button>
+                                            </div>`).join('')}</div>` : ''}
+                                    </div>`;
+                                }).join('') : `<div style="padding:1rem;color:var(--gray-500);background:var(--gray-50);border-radius:var(--radius-md);">No chapters yet. Click <strong>+ Add Chapter</strong>.</div>`}
+                            </div>
+                        </div>`;
+                }).join('') : `<div style="padding:1.5rem;text-align:center;color:var(--gray-500);background:var(--gray-50);border-radius:var(--radius-md);">
+                    No subjects in ${esc(currentClass.name)}${stream ? ` → ${esc(stream.name)}` : ''}. Click <strong>+ Add Subject</strong>.
+                </div>`}
+            </div>`;
+    }
+
+    async function refreshSubjectManager() {
+        await loadSubjectManager();
+        subjectManagerRender();
+    }
+
+    async function subjectNameModal(title, helpText, placeholder, onSave) {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+
+            modal.innerHTML = `
+                <div class="modal" style="max-width:520px;">
+                    <button class="modal-close" type="button"
+                            onclick="this.closest('.modal-overlay').remove()">×</button>
+                    <h2 style="margin-bottom:.5rem;">${esc(title)}</h2>
+                    <p style="color:var(--gray-500);margin-bottom:1rem;">${esc(helpText)}</p>
+                    <div class="form-group">
+                        <label>Name *</label>
+                        <input id="subjectManagerName" class="form-input" placeholder="${esc(placeholder)}" autocomplete="off">
+                    </div>
+                    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+                        <button class="btn btn-outline" type="button"
+                                onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                        <button class="btn btn-gold" type="button" id="subjectManagerSave">Save</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContainer').appendChild(modal);
+
+            const input = document.getElementById('subjectManagerName');
+            const saveBtn = document.getElementById('subjectManagerSave');
+
+            const submit = async () => {
+                const name = input.value.trim();
+                if (!name) {
+                    showToast('Please enter a name.', 'error');
+                    input.focus();
+                    return;
+                }
+
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+
+                try {
+                    await onSave(name);
+                    modal.remove();
+                    resolve(true);
+                } catch (error) {
+                    console.error(error);
+                    showToast('Error: ' + error.message, 'error');
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = 'Save';
+                }
+            };
+
+            saveBtn.addEventListener('click', submit);
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') submit();
+                if (e.key === 'Escape') modal.remove();
+            });
+
+            setTimeout(() => input.focus(), 50);
+        });
+    }
+
+    window.subjectSelectClass = function(index) {
+        subjectManager.classIndex = Number(index) || 0;
+        subjectManager.streamIndex = 0;
+        subjectManagerRender();
+    };
+
+    window.setSeniorStream = setSeniorStream;
+
+    window.subjectAddStream = async function() {
+        const currentClass = subjectManager.structure.classes[subjectManager.classIndex];
+        if (!isSeniorClass(currentClass)) return;
+        await subjectNameModal('Add Stream', `Add a stream inside ${currentClass.name}.`, 'Example: Commerce', async name => {
+            currentClass.streams = Array.isArray(currentClass.streams) ? currentClass.streams : [];
+            if (currentClass.streams.some(s => String(s.name).toLowerCase() === name.toLowerCase())) throw new Error('This stream already exists.');
+            currentClass.streams.push({name, subjects: []});
+            subjectManager.streamIndex = currentClass.streams.length - 1;
+            await saveStructure(subjectManager.structure);
+            showToast(`Stream "${name}" added.`, 'success');
+            await refreshSubjectManager();
+        });
+    };
+
+    window.subjectAddSubject = async function() {
+        const { currentClass, stream, subjects } = getActiveSubjectContext();
+        if (!currentClass) return;
+
+        await subjectNameModal(
+            'Add Subject',
+            `Add a subject inside ${currentClass.name}${stream ? ` → ${stream.name}` : ''}.`,
+            'Example: Mathematics',
+            async (name) => {
+                if (subjects.some(s => subjectObject(s).name.toLowerCase() === name.toLowerCase())) {
+                    throw new Error(`Subject "${name}" already exists.`);
+                }
+                subjects.push({name, chapters: []});
+                await saveStructure(subjectManager.structure);
+                showToast(`Subject "${name}" added.`, 'success');
+                await refreshSubjectManager();
+            }
+        );
+    };
+
+    window.subjectRenameSubject = async function(subjectIndex, value) {
+        const name = value.trim();
+        if (!name) { showToast('Subject name cannot be empty.', 'error'); return; }
+
+        const { currentClass, stream, subjects } = getActiveSubjectContext();
+        const target = subjectObject(subjects[subjectIndex]);
+        const oldName = target.name;
+        if (subjects.some((s,i)=>i!==subjectIndex && subjectObject(s).name.toLowerCase()===name.toLowerCase())) {
+            showToast('A subject with this name already exists.', 'error');
+            subjectManagerRender();
+            return;
+        }
+
+        target.name = name;
+        subjects[subjectIndex] = target;
+
+        const resources = subjectManager.materials.filter(m =>
+            String(m.class||'')===String(currentClass.name||'') &&
+            String(m.subject||'')===String(oldName||'') &&
+            (!stream || String(m.stream||'')===String(stream.name||''))
+        );
+        for (const resource of resources) {
+            const {error}=await supabaseClient.from('materials').update({subject:name}).eq('id',resource.id);
+            if(error) throw error;
+        }
+        await saveStructure(subjectManager.structure);
+        showToast('Subject renamed.', 'success');
+        await refreshSubjectManager();
+    };
+
+    window.subjectDeleteSubject = async function(subjectIndex) {
+        const { currentClass, stream, subjects } = getActiveSubjectContext();
+        const subject = subjectObject(subjects[subjectIndex]);
+        if (!confirm(`Delete "${subject.name}" from ${currentClass.name}${stream ? ` → ${stream.name}` : ''}?`)) return;
+        subjects.splice(subjectIndex, 1);
+        await saveStructure(subjectManager.structure);
+        showToast('Subject deleted.', 'success');
+        await refreshSubjectManager();
+    };
+
+    window.subjectAddChapter = async function(subjectIndex) {
+        const { currentClass, stream, subjects } = getActiveSubjectContext();
+        const subject = subjectObject(subjects[subjectIndex]);
+        await subjectNameModal('Add Chapter',
+            `Add a chapter inside ${currentClass.name}${stream ? ` → ${stream.name}` : ''} → ${subject.name}.`,
+            'Example: Chapter 1 - Introduction',
+            async name => {
+                subject.chapters = Array.isArray(subject.chapters) ? subject.chapters : [];
+                if (subject.chapters.some(ch=>String(ch).toLowerCase()===name.toLowerCase())) throw new Error(`Chapter "${name}" already exists.`);
+                subject.chapters.push(name);
+                subjects[subjectIndex]=subject;
+                await saveStructure(subjectManager.structure);
+                showToast(`Chapter "${name}" added.`, 'success');
+                await refreshSubjectManager();
+            });
+    };
+
+    window.subjectRenameChapter = async function(subjectIndex, oldName) {
+        const { currentClass, stream, subjects } = getActiveSubjectContext();
+        const subject = subjectObject(subjects[subjectIndex]);
+        await subjectNameModal('Rename Chapter', `Rename "${oldName}" inside ${subject.name}.`, 'New chapter name', async name => {
+            if (subject.chapters.some(ch=>ch!==oldName && String(ch).toLowerCase()===name.toLowerCase())) throw new Error(`Chapter "${name}" already exists.`);
+            const chapterIndex=subject.chapters.indexOf(oldName);
+            if(chapterIndex>=0) subject.chapters[chapterIndex]=name;
+            const resources=subjectManager.materials.filter(m=>
+                String(m.class||'')===String(currentClass.name||'') &&
+                String(m.subject||'')===String(subject.name||'') &&
+                String(m.chapter||'')===String(oldName||'') &&
+                (!stream || String(m.stream||'')===String(stream.name||''))
+            );
+            for(const resource of resources){
+                const {error}=await supabaseClient.from('materials').update({chapter:name}).eq('id',resource.id);
+                if(error) throw error;
+            }
+            subjects[subjectIndex]=subject;
+            await saveStructure(subjectManager.structure);
+            showToast('Chapter renamed.', 'success');
+            await refreshSubjectManager();
+        });
+    };
+
+    window.subjectDeleteChapter = async function(subjectIndex, chapterName) {
+        const { subjects } = getActiveSubjectContext();
+        const subject=subjectObject(subjects[subjectIndex]);
+        if(!confirm(`Delete chapter "${chapterName}"? Existing resources will be kept.`)) return;
+        subject.chapters=subject.chapters.filter(ch=>ch!==chapterName);
+        subjects[subjectIndex]=subject;
+        await saveStructure(subjectManager.structure);
+        showToast('Chapter deleted. Existing resources were kept.', 'success');
+        await refreshSubjectManager();
+    };
+
+    function subjectResourceFormHTML(resource, className, subjectName, chapterName, streamName = null) {
+        return `
+            <div class="form-group">
+                <label>Class</label>
+                <input class="form-input" value="${esc(className)}" readonly>
+            </div>
+            ${streamName ? `<div class="form-group"><label>Stream</label><input class="form-input" value="${esc(streamName)}" readonly></div>` : ''}
+            <div class="form-group">
+                <label>Subject</label>
+                <input class="form-input" value="${esc(subjectName)}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Chapter</label>
+                <input class="form-input" value="${esc(chapterName)}" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Resource Title *</label>
+                <input class="form-input" id="smrTitle" value="${esc(resource?.title)}" placeholder="e.g. Chapter 1 DPP">
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea class="form-input" id="smrDescription" rows="4">${esc(resource?.description)}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Type *</label>
+                <select class="form-input" id="smrType">
+                    ${['Notes','PDF','DPP','Video','PYQ','MCQ','Test','Revision Sheet'].map(type =>
+                        `<option value="${type}" ${resource?.type === type ? 'selected' : ''}>${type}</option>`
+                    ).join('')}
+                </select>
+            </div>
+
+            ${adminImageField({label:'Thumbnail / Cover Image', inputId:'smrThumbnail', value:resource?.thumbnail_url, folder:'subject-resources/thumbnails', previewId:'smrThumbnailPreview'})}
+
+            <div class="form-group">
+                <label>YouTube URL</label>
+                <input type="url" class="form-input" id="smrYoutube" value="${esc(resource?.youtube_url)}" placeholder="https://youtu.be/...">
+            </div>
+
+            <div class="form-group">
+                <label>Resource / PDF URL</label>
+                <input type="url" class="form-input" id="smrResourceUrl" value="${esc(resource?.resource_url)}">
+            </div>
+
+            <div class="form-group">
+                <label>Direct Download URL</label>
+                <input type="url" class="form-input" id="smrDownload" value="${esc(resource?.download_url)}">
+            </div>
+
+            <div class="form-group">
+                <label style="display:flex;align-items:center;gap:.5rem;">
+                    <input type="checkbox" id="smrPublished" ${resource?.published !== false ? 'checked' : ''}>
+                    Published
+                </label>
+            </div>
+        `;
+    }
+
+    async function openSubjectResourceModal(resource, className, subjectName, chapterName, streamName = null) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+
+        modal.innerHTML = `
+            <div class="modal" style="max-width:720px;max-height:90vh;overflow-y:auto;">
+                <h2 style="margin-bottom:.5rem;">${resource ? 'Edit' : 'Add'} Resource</h2>
+                <p style="color:var(--gray-500);margin-bottom:1.25rem;">
+                    ${esc(className)}${streamName ? ` → ${esc(streamName)}` : ''} → ${esc(subjectName)} → ${esc(chapterName)}
+                </p>
+                <div id="subjectResourceForm"></div>
+                <div style="display:flex;gap:.5rem;margin-top:1.25rem;">
+                    <button class="btn btn-primary" id="subjectResourceSave">Save Resource</button>
+                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('modalContainer').appendChild(modal);
+        document.getElementById('subjectResourceForm').innerHTML =
+            subjectResourceFormHTML(resource, className, subjectName, chapterName, streamName);
+
+        document.getElementById('subjectResourceSave').onclick = async () => {
+            const payload = {
+                title: document.getElementById('smrTitle').value.trim(),
+                description: document.getElementById('smrDescription').value.trim(),
+                class: className,
+                stream: streamName || null,
+                subject: subjectName,
+                chapter: chapterName,
+                type: document.getElementById('smrType').value,
+                thumbnail_url: document.getElementById('smrThumbnail').value.trim(),
+                youtube_url: document.getElementById('smrYoutube').value.trim(),
+                resource_url: document.getElementById('smrResourceUrl').value.trim(),
+                download_url: document.getElementById('smrDownload').value.trim() || null,
+                published: document.getElementById('smrPublished').checked
+            };
+
+            if (!payload.title) {
+                showToast('Resource title is required.', 'error');
+                return;
+            }
+
+            const saveButton = document.getElementById('subjectResourceSave');
+            saveButton.disabled = true;
+            saveButton.textContent = 'Saving...';
+
+            try {
+                let result;
+
+                if (resource?.id) {
+                    result = await supabaseClient
+                        .from('materials')
+                        .update(payload)
+                        .eq('id', resource.id);
+                } else {
+                    result = await supabaseClient
+                        .from('materials')
+                        .insert(payload)
+                        .select();
+                }
+
+                if (result.error) {
+                    // Backward compatibility in case download_url was not migrated.
+                    if (/download_url|column/i.test(result.error.message || '')) {
+                        const fallback = { ...payload };
+                        delete fallback.download_url;
+
+                        result = resource?.id
+                            ? await supabaseClient.from('materials').update(fallback).eq('id', resource.id)
+                            : await supabaseClient.from('materials').insert(fallback).select();
+                    }
+                }
+
+                if (result.error) throw result.error;
+
+                modal.remove();
+                showToast(resource?.id ? 'Resource updated.' : 'Resource added.', 'success');
+                await refreshSubjectManager();
+            } catch (error) {
+                console.error(error);
+                showToast('Error: ' + error.message, 'error');
+                saveButton.disabled = false;
+                saveButton.textContent = 'Save Resource';
+            }
+        };
+    }
+
+    window.subjectAddResource = async function(subjectIndex, chapterName) {
+        try {
+            if (!subjectManager.structure || !Array.isArray(subjectManager.structure.classes)) {
+                throw new Error('Subject workspace is not loaded yet.');
+            }
+
+            const currentClass = subjectManager.structure.classes[subjectManager.classIndex];
+            if (!currentClass) throw new Error('Please select a class first.');
+
+            currentClass.subjects = Array.isArray(currentClass.subjects) ? currentClass.subjects : [];
+            const rawSubject = currentClass.subjects[subjectIndex];
+            if (!rawSubject) throw new Error('Subject not found.');
+
+            const subject = subjectObject(rawSubject);
+            const { stream } = getActiveSubjectContext();
+            await openSubjectResourceModal(
+                null,
+                currentClass.name,
+                subject.name,
+                chapterName,
+                stream?.name || null
+            );
+        } catch (error) {
+            console.error('Add resource failed:', error);
+            showToast('Unable to open resource form: ' + error.message, 'error');
+        }
+    };
+
+    window.subjectEditResource = async function(resourceId) {
+        const resource = subjectManager.materials.find(m => String(m.id) === String(resourceId));
+        if (!resource) {
+            showToast('Resource not found.', 'error');
+            return;
+        }
+
+        await openSubjectResourceModal(
+            resource,
+            resource.class,
+            resource.subject,
+            resource.chapter,
+            resource.stream || null
+        );
+    };
+
+    window.subjectDeleteResource = async function(resourceId) {
+        if (!confirm('Delete this resource?')) return;
+
+        try {
+            const { error } = await supabaseClient
+                .from('materials')
+                .delete()
+                .eq('id', resourceId);
+
+            if (error) throw error;
+
+            showToast('Resource deleted.', 'success');
+            await refreshSubjectManager();
+        } catch (error) {
+            showToast('Error: ' + error.message, 'error');
+        }
+    };
+
+    async function renderSubjects(container) {
+        container.innerHTML = `
+            <div class="card">
+                <div style="text-align:center;padding:2rem;">
+                    <div class="loading-spinner"></div>
+                    <p style="margin-top:.75rem;color:var(--gray-500);">Loading subject workspace...</p>
+                </div>
+            </div>`;
+
+        try {
+            await loadSubjectManager();
+            subjectManagerRender();
+        } catch (error) {
+            console.error('Subject workspace:', error);
+            container.innerHTML = `<div class="card"><p style="color:var(--red-500);">Error loading subjects: ${esc(error.message)}</p></div>`;
+        }
+    }
+
+
+    // ==================== VIDEOS ====================
+    async function renderVideos(container) {
+        container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="loading-spinner"></div></div>';
+        try {
+            const { data: videos, error } = await supabaseClient.from('videos').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Videos (${videos?.length || 0})</h2>
+                        <button class="btn btn-gold" onclick="showVideoForm()">+ Add Video</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Title</th><th>Class</th><th>Subject</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                ${videos?.length > 0 ? videos.map(v => `
+                                    <tr>
+                                        <td>${esc(v.title)}</td>
+                                        <td>${esc(v.class || '-')}</td>
+                                        <td>${esc(v.subject || '-')}</td>
+                                        <td><span class="badge ${v.published ? 'badge-published' : 'badge-draft'}">${v.published ? 'Published' : 'Draft'}</span></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm" onclick="showVideoForm('${v.id}')">Edit</button>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteVideo('${v.id}')">Delete</button>
+                                        </td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="5" style="text-align:center;">No videos</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+        }
+    }
+
+    function showVideoForm(videoId = null) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal">
+                <h2 style="margin-bottom:1.5rem;">${videoId ? 'Edit' : 'Add'} Video</h2>
+                <div id="videoFormContent"><div style="text-align:center;padding:2rem;"><div class="loading-spinner"></div></div></div>
+                <div style="display:flex;gap:0.5rem;margin-top:1.5rem;">
+                    <button class="btn btn-primary" onclick="saveVideo('${videoId || ''}')">Save</button>
+                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.getElementById('modalContainer').appendChild(modal);
+        if (videoId) loadVideoForEdit(videoId);
+        else document.getElementById('videoFormContent').innerHTML = videoFormHTML();
+    }
+
+    async function loadVideoForEdit(id) {
+        try {
+            const { data, error } = await supabaseClient.from('videos').select('*').eq('id', id).single();
+            if (error) throw error;
+            document.getElementById('videoFormContent').innerHTML = videoFormHTML(data);
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    function videoFormHTML(v = null) {
+        const classOptions = Array.from({length: 12}, (_, i) => `Class ${i+1}`)
+            .map(c => `<option ${v?.class === c ? 'selected' : ''}>${c}</option>`).join('');
+        return `
+            <div class="form-group"><label>Title *</label><input type="text" class="form-input" id="vidTitle" value="${esc(v?.title)}"></div>
+            <div class="form-group"><label>Description</label><textarea class="form-input" id="vidDescription" rows="3">${esc(v?.description)}</textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="form-group"><label>Class</label><select class="form-input" id="vidClass"><option value="">Select</option>${classOptions}</select></div>
+                <div class="form-group"><label>Subject</label><input type="text" class="form-input" id="vidSubject" value="${esc(v?.subject)}"></div>
+            </div>
+            <div class="form-group"><label>Chapter</label><input type="text" class="form-input" id="vidChapter" value="${esc(v?.chapter)}"></div>
+            <div class="form-group"><label>YouTube URL *</label><input type="url" class="form-input" id="vidYoutubeUrl" value="${esc(v?.youtube_url)}" placeholder="https://youtube.com/watch?v=..."></div>
+            ${adminImageField({label:'Thumbnail', inputId:'vidThumbnail', value:v?.thumbnail_url, folder:'videos/thumbnails', previewId:'vidThumbnailPreview'})}
+            <div class="form-group"><label>Direct Download URL</label><input type="url" class="form-input" id="vidDownloadUrl" value="${esc(v?.download_url)}"></div>
+            <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" id="vidPublished" ${v?.published ? 'checked' : ''}> Published</label></div>
+        `;
+    }
+
+    async function saveVideo(id) {
+        const payload = {
+            title: document.getElementById('vidTitle').value.trim(),
+            description: document.getElementById('vidDescription').value.trim(),
+            class: document.getElementById('vidClass').value,
+            subject: document.getElementById('vidSubject').value.trim(),
+            chapter: document.getElementById('vidChapter').value.trim(),
+            youtube_url: document.getElementById('vidYoutubeUrl').value.trim(),
+            thumbnail_url: document.getElementById('vidThumbnail').value.trim(),
+            download_url: document.getElementById('vidDownloadUrl').value.trim() || null,
+            published: document.getElementById('vidPublished').checked
+        };
+        if (!payload.title || !payload.youtube_url) { showToast('Title & YouTube URL required', 'error'); return; }
+        try {
+            let result;
+            if (id) result = await supabaseClient.from('videos').update(payload).eq('id', id);
+            else result = await supabaseClient.from('videos').insert(payload).select();
+            if (result.error) throw result.error;
+            document.querySelector('.modal-overlay')?.remove();
+            showToast('Video saved!', 'success');
+            switchPage('videos');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    async function deleteVideo(id) {
+        if (!confirm('Delete this video?')) return;
+        try {
+            const { error } = await supabaseClient.from('videos').delete().eq('id', id);
+            if (error) throw error;
+            showToast('Deleted', 'success');
+            switchPage('videos');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== NEWS ====================
+    async function renderNews(container) {
+        container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="loading-spinner"></div></div>';
+        try {
+            const { data: news, error } = await supabaseClient.from('news').select('*').order('published_date', { ascending: false });
+            if (error) throw error;
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">News (${news?.length || 0})</h2>
+                        <button class="btn btn-gold" onclick="showNewsForm()">+ Add News</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Title</th><th>Category</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                ${news?.length > 0 ? news.map(n => `
+                                    <tr>
+                                        <td>${esc(n.title)}</td>
+                                        <td>${esc(n.category || '-')}</td>
+                                        <td>${esc(n.published_date || '-')}</td>
+                                        <td><span class="badge ${n.published ? 'badge-published' : 'badge-draft'}">${n.published ? 'Published' : 'Draft'}</span></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm" onclick="showNewsForm('${n.id}')">Edit</button>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteNews('${n.id}')">Delete</button>
+                                        </td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="5" style="text-align:center;">No news</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+        }
+    }
+
+    function showNewsForm(newsId = null) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal">
+                <h2 style="margin-bottom:1.5rem;">${newsId ? 'Edit' : 'Add'} News</h2>
+                <div id="newsFormContent"><div style="text-align:center;padding:2rem;"><div class="loading-spinner"></div></div></div>
+                <div style="display:flex;gap:0.5rem;margin-top:1.5rem;">
+                    <button class="btn btn-primary" onclick="saveNews('${newsId || ''}')">Save</button>
+                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.getElementById('modalContainer').appendChild(modal);
+        if (newsId) loadNewsForEdit(newsId);
+        else document.getElementById('newsFormContent').innerHTML = newsFormHTML();
+    }
+
+    async function loadNewsForEdit(id) {
+        try {
+            const { data, error } = await supabaseClient.from('news').select('*').eq('id', id).single();
+            if (error) throw error;
+            document.getElementById('newsFormContent').innerHTML = newsFormHTML(data);
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    function newsFormHTML(n = null) {
+        const cats = ['Board Exams','Exam Notifications','Admissions','Scholarships','Government Updates','College Admissions','General'];
+        return `
+            <div class="form-group"><label>Title *</label><input type="text" class="form-input" id="newsTitle" value="${esc(n?.title)}"></div>
+            <div class="form-group"><label>Content</label><textarea class="form-input" id="newsDescription" rows="6">${esc(n?.description)}</textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="form-group"><label>Category</label><select class="form-input" id="newsCategory">${cats.map(c => `<option ${n?.category === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+                <div class="form-group"><label>Date</label><input type="date" class="form-input" id="newsDate" value="${esc(n?.published_date || new Date().toISOString().slice(0,10))}"></div>
+            </div>
+            ${adminImageField({label:'News Image', inputId:'newsImageUrl', value:n?.image_url, folder:'news/images', previewId:'newsImagePreview'})}
+            <div class="form-group"><label>Article URL</label><input type="url" class="form-input" id="newsArticleUrl" value="${esc(n?.article_url)}"></div>
+            <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" id="newsPublished" ${n?.published ? 'checked' : ''}> Published</label></div>
+        `;
+    }
+
+    async function saveNews(id) {
+        const payload = {
+            title: document.getElementById('newsTitle').value.trim(),
+            description: document.getElementById('newsDescription').value.trim(),
+            category: document.getElementById('newsCategory').value,
+            image_url: document.getElementById('newsImageUrl').value.trim(),
+            article_url: document.getElementById('newsArticleUrl').value.trim(),
+            published_date: document.getElementById('newsDate').value,
+            published: document.getElementById('newsPublished').checked
+        };
+        if (!payload.title) { showToast('Title required', 'error'); return; }
+        try {
+            let result;
+            if (id) result = await supabaseClient.from('news').update(payload).eq('id', id);
+            else result = await supabaseClient.from('news').insert(payload).select();
+            if (result.error) throw result.error;
+            document.querySelector('.modal-overlay')?.remove();
+            showToast('News saved!', 'success');
+            switchPage('news');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    async function deleteNews(id) {
+        if (!confirm('Delete this news?')) return;
+        try {
+            const { error } = await supabaseClient.from('news').delete().eq('id', id);
+            if (error) throw error;
+            showToast('Deleted', 'success');
+            switchPage('news');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== CURRENT AFFAIRS ====================
+    async function renderCurrentAffairs(container) {
+        container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="loading-spinner"></div></div>';
+        try {
+            const { data: affairs, error } = await supabaseClient.from('current_affairs').select('*').order('date', { ascending: false });
+            if (error) throw error;
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Current Affairs (${affairs?.length || 0})</h2>
+                        <button class="btn btn-gold" onclick="showCurrentAffairForm()">+ Add Entry</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Title</th><th>Type</th><th>Topic</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                ${affairs?.length > 0 ? affairs.map(a => `
+                                    <tr>
+                                        <td>${esc(a.title)}</td>
+                                        <td><span class="badge">${esc(a.type)}</span></td>
+                                        <td>${esc(a.topic || '-')}</td>
+                                        <td>${esc(a.date || '-')}</td>
+                                        <td><span class="badge ${a.published ? 'badge-published' : 'badge-draft'}">${a.published ? 'Published' : 'Draft'}</span></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm" onclick="showCurrentAffairForm('${a.id}')">Edit</button>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteCurrentAffair('${a.id}')">Delete</button>
+                                        </td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="6" style="text-align:center;">No entries</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+        }
+    }
+
+    function showCurrentAffairForm(id = null) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal">
+                <h2 style="margin-bottom:1.5rem;">${id ? 'Edit' : 'Add'} Current Affair</h2>
+                <div id="caFormContent"><div style="text-align:center;padding:2rem;"><div class="loading-spinner"></div></div></div>
+                <div style="display:flex;gap:0.5rem;margin-top:1.5rem;">
+                    <button class="btn btn-primary" onclick="saveCurrentAffair('${id || ''}')">Save</button>
+                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.getElementById('modalContainer').appendChild(modal);
+        if (id) loadCAForEdit(id);
+        else document.getElementById('caFormContent').innerHTML = caFormHTML();
+    }
+
+    async function loadCAForEdit(id) {
+        try {
+            const { data, error } = await supabaseClient.from('current_affairs').select('*').eq('id', id).single();
+            if (error) throw error;
+            document.getElementById('caFormContent').innerHTML = caFormHTML(data);
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    function caFormHTML(a = null) {
+        return `
+            <div class="form-group"><label>Title *</label><input type="text" class="form-input" id="caTitle" value="${esc(a?.title)}"></div>
+            <div class="form-group"><label>Description</label><textarea class="form-input" id="caDescription" rows="5">${esc(a?.description)}</textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="form-group"><label>Type</label><select class="form-input" id="caType">${['Daily','Weekly','Monthly','Quiz','PDF'].map(t => `<option ${a?.type === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+                <div class="form-group"><label>Topic</label><input type="text" class="form-input" id="caTopic" value="${esc(a?.topic)}"></div>
+            </div>
+            <div class="form-group"><label>Date</label><input type="date" class="form-input" id="caDate" value="${esc(a?.date || new Date().toISOString().slice(0,10))}"></div>
+            ${adminImageField({label:'Current Affairs Image', inputId:'caImageUrl', value:a?.image_url, folder:'current-affairs/images', previewId:'caImagePreview'})}
+            <div class="form-group"><label>Resource URL</label><input type="url" class="form-input" id="caResourceUrl" value="${esc(a?.resource_url)}"></div>
+            <div class="form-group"><label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" id="caPublished" ${a?.published ? 'checked' : ''}> Published</label></div>
+        `;
+    }
+
+    async function saveCurrentAffair(id) {
+        const payload = {
+            title: document.getElementById('caTitle').value.trim(),
+            description: document.getElementById('caDescription').value.trim(),
+            type: document.getElementById('caType').value,
+            topic: document.getElementById('caTopic').value.trim(),
+            date: document.getElementById('caDate').value,
+            image_url: document.getElementById('caImageUrl').value.trim() || null,
+            resource_url: document.getElementById('caResourceUrl').value.trim(),
+            published: document.getElementById('caPublished').checked
+        };
+        if (!payload.title) { showToast('Title required', 'error'); return; }
+        try {
+            let result;
+            if (id) result = await supabaseClient.from('current_affairs').update(payload).eq('id', id);
+            else result = await supabaseClient.from('current_affairs').insert(payload).select();
+            if (result.error) throw result.error;
+            document.querySelector('.modal-overlay')?.remove();
+            showToast('Entry saved!', 'success');
+            switchPage('current-affairs');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    async function deleteCurrentAffair(id) {
+        if (!confirm('Delete this entry?')) return;
+        try {
+            const { error } = await supabaseClient.from('current_affairs').delete().eq('id', id);
+            if (error) throw error;
+            showToast('Deleted', 'success');
+            switchPage('current-affairs');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== TESTS ====================
+    async function renderTests(container) {
+        container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="loading-spinner"></div></div>';
+        try {
+            const { data: tests, error } = await supabaseClient.from('tests').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Tests & Quizzes (${tests?.length || 0})</h2>
+                        <button class="btn btn-gold" onclick="showTestBuilder()">+ Create Test</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Title</th><th>Class</th><th>Subject</th><th>Duration</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                ${tests?.length > 0 ? tests.map(t => `
+                                    <tr>
+                                        <td>${esc(t.title)}</td>
+                                        <td>${esc(t.class || '-')}</td>
+                                        <td>${esc(t.subject || '-')}</td>
+                                        <td>${t.duration || '-'} min</td>
+                                        <td><span class="badge ${t.published ? 'badge-published' : 'badge-draft'}">${t.published ? 'Published' : 'Draft'}</span></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm" onclick="showTestBuilder('${t.id}')">Edit</button>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteTest('${t.id}')">Delete</button>
+                                        </td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="6" style="text-align:center;">No tests</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+        }
+    }
+
+    function showTestBuilder(id = null) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal" style="max-width:800px;">
+                <h2 style="margin-bottom:1.5rem;">${id ? 'Edit' : 'Create'} Test</h2>
+                <div id="testFormContent"><div style="text-align:center;padding:2rem;"><div class="loading-spinner"></div></div></div>
+                <div style="display:flex;gap:0.5rem;margin-top:1.5rem;">
+                    <button class="btn btn-primary" onclick="saveTest('${id || ''}')">Save Test</button>
+                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.getElementById('modalContainer').appendChild(modal);
+        if (id) loadTestForEdit(id);
+        else {
+            document.getElementById('testFormContent').innerHTML = testFormHTML();
+            window._questions = [];
+            addQuestion();
+        }
+    }
+
+    async function loadTestForEdit(id) {
+        try {
+            const { data: test, error } = await supabaseClient.from('tests').select('*').eq('id', id).single();
+            if (error) throw error;
+            document.getElementById('testFormContent').innerHTML = testFormHTML(test);
+            const { data: qs } = await supabaseClient.from('test_questions').select('*').eq('test_id', id).order('question_order');
+            window._questions = (qs || []).map(q => ({
+                question: q.question, option_a: q.option_a, option_b: q.option_b,
+                option_c: q.option_c, option_d: q.option_d,
+                correct_answer: q.correct_answer, explanation: q.explanation
+            }));
+            renderQuestionsList();
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    function testFormHTML(t = null) {
+        const classOptions = Array.from({length: 12}, (_, i) => `Class ${i+1}`)
+            .map(c => `<option ${t?.class === c ? 'selected' : ''}>${c}</option>`).join('');
+        return `
+            <div class="form-group"><label>Test Title *</label><input type="text" class="form-input" id="testTitle" value="${esc(t?.title)}"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+                <div class="form-group"><label>Class</label><select class="form-input" id="testClass"><option value="">Select</option>${classOptions}</select></div>
+                <div class="form-group"><label>Subject</label><input type="text" class="form-input" id="testSubject" value="${esc(t?.subject)}"></div>
+                <div class="form-group"><label>Duration (min)</label><input type="number" class="form-input" id="testDuration" value="${t?.duration || 30}" min="1"></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea class="form-input" id="testDescription" rows="2">${esc(t?.description)}</textarea></div>
+            <h3 style="margin:1.5rem 0 1rem;">Questions</h3>
+            <div id="questionsList"></div>
+            <button class="btn btn-primary btn-sm" onclick="addQuestion()">+ Add Question</button>
+            <div class="form-group" style="margin-top:1.5rem;"><label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" id="testPublished" ${t?.published ? 'checked' : ''}> Published</label></div>
+        `;
+    }
+
+    function addQuestion() {
+        window._questions = window._questions || [];
+        window._questions.push({ question: '', option_a: '', option_b: '', option_c: '', option_d: '', correct_answer: 'A', explanation: '' });
+        renderQuestionsList();
+    }
+
+    function renderQuestionsList() {
+        const el = document.getElementById('questionsList');
+        if (!el) return;
+        el.innerHTML = window._questions.map((q, i) => `
+            <div style="border:1px solid var(--navy-200);border-radius:12px;padding:1rem;margin-bottom:1rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <strong>Question ${i + 1}</strong>
+                    <button class="btn btn-danger btn-sm" onclick="removeQuestion(${i})">Remove</button>
+                </div>
+                <div class="form-group"><label>Question *</label><input type="text" class="form-input" value="${esc(q.question)}" onchange="updateQ(${i},'question',this.value)"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+                    <div class="form-group"><label>Option A</label><input type="text" class="form-input" value="${esc(q.option_a)}" onchange="updateQ(${i},'option_a',this.value)"></div>
+                    <div class="form-group"><label>Option B</label><input type="text" class="form-input" value="${esc(q.option_b)}" onchange="updateQ(${i},'option_b',this.value)"></div>
+                    <div class="form-group"><label>Option C</label><input type="text" class="form-input" value="${esc(q.option_c)}" onchange="updateQ(${i},'option_c',this.value)"></div>
+                    <div class="form-group"><label>Option D</label><input type="text" class="form-input" value="${esc(q.option_d)}" onchange="updateQ(${i},'option_d',this.value)"></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-group"><label>Correct Answer</label><select class="form-input" onchange="updateQ(${i},'correct_answer',this.value)">
+                        ${['A','B','C','D'].map(x => `<option ${q.correct_answer === x ? 'selected' : ''}>${x}</option>`).join('')}
+                    </select></div>
+                    <div class="form-group"><label>Explanation</label><input type="text" class="form-input" value="${esc(q.explanation)}" onchange="updateQ(${i},'explanation',this.value)"></div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateQ(i, key, val) { window._questions[i][key] = val; }
+    function removeQuestion(i) { window._questions.splice(i, 1); renderQuestionsList(); }
+
+    async function saveTest(id) {
+        const title = document.getElementById('testTitle').value.trim();
+        if (!title) { showToast('Title required', 'error'); return; }
+        const testData = {
+            title,
+            class: document.getElementById('testClass').value,
+            subject: document.getElementById('testSubject').value.trim(),
+            duration: parseInt(document.getElementById('testDuration').value) || 30,
+            description: document.getElementById('testDescription').value.trim(),
+            published: document.getElementById('testPublished').checked
+        };
+        try {
+            let testResult;
+            if (id) testResult = await supabaseClient.from('tests').update(testData).eq('id', id);
+            else testResult = await supabaseClient.from('tests').insert(testData).select();
+            if (testResult.error) throw testResult.error;
+            const savedId = id || testResult.data[0].id;
+            if (id) await supabaseClient.from('test_questions').delete().eq('test_id', id);
+            const questions = window._questions.filter(q => q.question).map((q, i) => ({ ...q, test_id: savedId, question_order: i }));
+            if (questions.length > 0) {
+                const { error } = await supabaseClient.from('test_questions').insert(questions);
+                if (error) throw error;
+            }
+            document.querySelector('.modal-overlay')?.remove();
+            showToast('Test saved!', 'success');
+            switchPage('tests');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    async function deleteTest(id) {
+        if (!confirm('Delete this test?')) return;
+        try {
+            const { error } = await supabaseClient.from('tests').delete().eq('id', id);
+            if (error) throw error;
+            showToast('Deleted', 'success');
+            switchPage('tests');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== ROADMAPS ====================
+    async function renderRoadmaps(container) {
+        container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="loading-spinner"></div></div>';
+        try {
+            const { data: roadmaps, error } = await supabaseClient.from('roadmaps').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Roadmaps (${roadmaps?.length || 0})</h2>
+                        <button class="btn btn-gold" onclick="showRoadmapForm()">+ Add Roadmap</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead><tr><th>Exam Name</th><th>Duration</th><th>Difficulty</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                ${roadmaps?.length > 0 ? roadmaps.map(r => `
+                                    <tr>
+                                        <td>${esc(r.exam_name)}</td>
+                                        <td>${esc(r.duration || '-')}</td>
+                                        <td>${esc(r.difficulty || '-')}</td>
+                                        <td><span class="badge ${r.published ? 'badge-published' : 'badge-draft'}">${r.published ? 'Published' : 'Draft'}</span></td>
+                                        <td>
+                                            <button class="btn btn-primary btn-sm" onclick="showRoadmapForm('${r.id}')">Edit</button>
+                                            <button class="btn btn-danger btn-sm" onclick="deleteRoadmap('${r.id}')">Delete</button>
+                                        </td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="5" style="text-align:center;">No roadmaps</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+        }
+    }
+
+    function showRoadmapForm(id = null) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal" style="max-width:700px;">
+                <h2 style="margin-bottom:1.5rem;">${id ? 'Edit' : 'Add'} Roadmap</h2>
+                <div id="roadmapFormContent"><div style="text-align:center;padding:2rem;"><div class="loading-spinner"></div></div></div>
+                <div style="display:flex;gap:0.5rem;margin-top:1.5rem;">
+                    <button class="btn btn-primary" onclick="saveRoadmap('${id || ''}')">Save</button>
+                    <button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.getElementById('modalContainer').appendChild(modal);
+        if (id) loadRoadmapForEdit(id);
+        else {
+            document.getElementById('roadmapFormContent').innerHTML = roadmapFormHTML();
+            window._steps = [];
+            addStep();
+        }
+    }
+
+    async function loadRoadmapForEdit(id) {
+        try {
+            const { data: r, error } = await supabaseClient.from('roadmaps').select('*').eq('id', id).single();
+            if (error) throw error;
+            document.getElementById('roadmapFormContent').innerHTML = roadmapFormHTML(r);
+            const { data: steps } = await supabaseClient.from('roadmap_steps').select('*').eq('roadmap_id', id).order('step_order');
+            window._steps = (steps || []).map(s => ({
+                month: s.month, title: s.title,
+                subjects: (s.subjects || []).join(', '),
+                topics: (s.topics || []).join(', ')
+            }));
+            renderStepsList();
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    function roadmapFormHTML(r = null) {
+        return `
+            <div class="form-group"><label>Exam / Roadmap Name *</label><input type="text" class="form-input" id="rmExamName" value="${esc(r?.exam_name)}"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="form-group"><label>Duration</label><input type="text" class="form-input" id="rmDuration" value="${esc(r?.duration)}" placeholder="e.g., 2 Years"></div>
+                <div class="form-group"><label>Difficulty</label><select class="form-input" id="rmDifficulty">${['Easy','Medium','Hard','Very Hard'].map(x => `<option ${r?.difficulty === x ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea class="form-input" id="rmDescription" rows="3">${esc(r?.description)}</textarea></div>
+            ${adminImageField({label:'Roadmap Diagram / Image', inputId:'rmDiagramUrl', value:r?.diagram_url, folder:'roadmaps/diagrams', previewId:'rmDiagramPreview'})}
+            <h3 style="margin:1.5rem 0 1rem;">Steps</h3>
+            <div id="stepsList"></div>
+            <button class="btn btn-primary btn-sm" onclick="addStep()">+ Add Step</button>
+            <div class="form-group" style="margin-top:1.5rem;"><label style="display:flex;align-items:center;gap:0.5rem;"><input type="checkbox" id="rmPublished" ${r?.published ? 'checked' : ''}> Published</label></div>
+        `;
+    }
+
+    function addStep() {
+        window._steps = window._steps || [];
+        window._steps.push({ month: '', title: '', subjects: '', topics: '' });
+        renderStepsList();
+    }
+
+    function renderStepsList() {
+        const el = document.getElementById('stepsList');
+        if (!el) return;
+        el.innerHTML = window._steps.map((s, i) => `
+            <div style="border:1px solid var(--navy-200);border-radius:12px;padding:1rem;margin-bottom:1rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                    <strong>Step ${i + 1}</strong>
+                    <button class="btn btn-danger btn-sm" onclick="removeStep(${i})">Remove</button>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-group"><label>Month</label><input class="form-input" value="${esc(s.month)}" onchange="updateS(${i},'month',this.value)"></div>
+                    <div class="form-group"><label>Title</label><input class="form-input" value="${esc(s.title)}" onchange="updateS(${i},'title',this.value)"></div>
+                </div>
+                <div class="form-group"><label>Subjects (comma-separated)</label><input class="form-input" value="${esc(s.subjects)}" onchange="updateS(${i},'subjects',this.value)"></div>
+                <div class="form-group"><label>Topics (comma-separated)</label><input class="form-input" value="${esc(s.topics)}" onchange="updateS(${i},'topics',this.value)"></div>
+            </div>
+        `).join('');
+    }
+
+    function updateS(i, key, val) { window._steps[i][key] = val; }
+    function removeStep(i) { window._steps.splice(i, 1); renderStepsList(); }
+
+    async function saveRoadmap(id) {
+        const examName = document.getElementById('rmExamName').value.trim();
+        if (!examName) { showToast('Name required', 'error'); return; }
+        const payload = {
+            exam_name: examName,
+            duration: document.getElementById('rmDuration').value.trim(),
+            difficulty: document.getElementById('rmDifficulty').value,
+            description: document.getElementById('rmDescription').value.trim(),
+            diagram_url: document.getElementById('rmDiagramUrl').value.trim() || null,
+            published: document.getElementById('rmPublished').checked
+        };
+        try {
+            let result;
+            if (id) result = await supabaseClient.from('roadmaps').update(payload).eq('id', id);
+            else result = await supabaseClient.from('roadmaps').insert(payload).select();
+            if (result.error) throw result.error;
+            const savedId = id || result.data[0].id;
+            if (id) await supabaseClient.from('roadmap_steps').delete().eq('roadmap_id', id);
+            const steps = window._steps.filter(s => s.month || s.title).map((s, i) => ({
+                roadmap_id: savedId, month: s.month, title: s.title,
+                subjects: s.subjects.split(',').map(x => x.trim()).filter(Boolean),
+                topics: s.topics.split(',').map(x => x.trim()).filter(Boolean),
+                step_order: i
+            }));
+            if (steps.length > 0) {
+                const { error } = await supabaseClient.from('roadmap_steps').insert(steps);
+                if (error) throw error;
+            }
+            document.querySelector('.modal-overlay')?.remove();
+            showToast('Roadmap saved!', 'success');
+            switchPage('roadmaps');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    async function deleteRoadmap(id) {
+        if (!confirm('Delete this roadmap?')) return;
+        try {
+            const { error } = await supabaseClient.from('roadmaps').delete().eq('id', id);
+            if (error) throw error;
+            showToast('Deleted', 'success');
+            switchPage('roadmaps');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== STUDENTS ====================
+    async function renderStudents(container) {
+        if (!isOwner()) {
+            container.innerHTML = '<div class="card"><p style="color:var(--red-500);">Owner-only section.</p></div>';
+            return;
+        }
+        container.innerHTML = '<div style="text-align:center;padding:3rem;"><div class="loading-spinner"></div></div>';
+        try {
+            const { data: students, error } = await supabaseClient.from('profile').select('*');
+            if (error) throw error;
+            const list = (students || []).filter(s => String(s.role || 'student').toLowerCase() !== 'admin');
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header"><h2 class="card-title">Students (${list.length})</h2></div>
+                    <input type="text" class="form-input" placeholder="Search..." oninput="filterTable('studentsTable', this.value)" style="margin-bottom:1rem;">
+                    <div class="table-container">
+                        <table id="studentsTable">
+                            <thead><tr><th>Name</th><th>Mobile</th><th>Email</th><th>Role</th></tr></thead>
+                            <tbody>
+                                ${list.length > 0 ? list.map(s => `
+                                    <tr>
+                                        <td>${esc(s.full_name || 'N/A')}</td>
+                                        <td>${esc(s.mobile || s.phone || 'N/A')}</td>
+                                        <td>${esc(s.email || 'N/A')}</td>
+                                        <td><span class="badge">${esc(s.role || 'student')}</span></td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="4" style="text-align:center;">No students</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+        }
+    }
+
+    // ==================== SETTINGS ====================
+    async function renderSettings(container) {
+        if (!isOwner()) {
+            container.innerHTML = '<div class="card"><p style="color:var(--red-500);">Owner-only section.</p></div>';
+            return;
+        }
+        container.innerHTML = '<div class="card"><p>Loading settings...</p></div>';
+        try {
+            const s = await getSettings();
+            container.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h2 class="card-title">Website Settings</h2>
+                            <p style="color:var(--gray-500);margin-top:.35rem;">Colors & homepage content — user panel mein reflect honge.</p>
+                        </div>
+                    </div>
+                    <h3 style="margin:1rem 0;">Colors</h3>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
+                        ${['primary_color','secondary_color','accent_color','background_color','text_color'].map(k => `
+                            <div class="form-group">
+                                <label>${k.replaceAll('_',' ')}</label>
+                                <input type="color" class="form-input" id="set_${k}" value="${esc(s[k])}" style="height:50px;padding:0.25rem;">
+                            </div>
+                        `).join('')}
+                    </div>
+                    <h3 style="margin:1.5rem 0 1rem;">Homepage Content</h3>
+                    <div class="form-group"><label>Hero Title</label><textarea class="form-input" id="set_hero_title" rows="2">${esc(s.hero_title)}</textarea></div>
+                    <div class="form-group"><label>Hero Subtitle</label><textarea class="form-input" id="set_hero_subtitle" rows="3">${esc(s.hero_subtitle)}</textarea></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group"><label>Hero Button 1</label><input class="form-input" id="set_hero_button_1" value="${esc(s.hero_button_1)}"></div>
+                        <div class="form-group"><label>Hero Button 2</label><input class="form-input" id="set_hero_button_2" value="${esc(s.hero_button_2)}"></div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                        <div class="form-group"><label>Quick Access Heading</label><input class="form-input" id="set_quick_access_title" value="${esc(s.quick_access_title)}"></div>
+                        <div class="form-group"><label>Materials Heading</label><input class="form-input" id="set_materials_title" value="${esc(s.materials_title)}"></div>
+                        <div class="form-group"><label>Roadmaps Heading</label><input class="form-input" id="set_roadmaps_title" value="${esc(s.roadmaps_title)}"></div>
+                        <div class="form-group"><label>News Heading</label><input class="form-input" id="set_news_title" value="${esc(s.news_title)}"></div>
+                    </div>
+                    <div class="form-group"><label>Announcement</label><input class="form-input" id="set_announcement" value="${esc(s.announcement || '')}"></div>
+                    <div class="form-group"><label>Footer Text</label><input class="form-input" id="set_footer_text" value="${esc(s.footer_text || '')}"></div>
+                    <button class="btn btn-gold" onclick="saveAllSettings()">💾 Save Website Settings</button>
+                </div>
+                <div class="card" style="margin-top:1rem;">
+                    <div class="card-header"><h2 class="card-title">Admin Account</h2></div>
+                    <div class="form-group"><label>Name</label><input class="form-input" value="${esc(currentProfile?.full_name || '')}" readonly></div>
+                    <div class="form-group"><label>Email</label><input class="form-input" value="${esc(currentUser?.email || '')}" readonly></div>
+                    <div class="form-group"><label>Role</label><input class="form-input" value="${esc(currentProfile?.role || 'admin')}" readonly></div>
+                </div>
+            `;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+        }
+    }
+
+    async function saveAllSettings() {
+        const keys = ['primary_color','secondary_color','accent_color','background_color','text_color','hero_title','hero_subtitle','hero_button_1','hero_button_2','quick_access_title','materials_title','roadmaps_title','news_title','announcement','footer_text'];
+        const patch = {};
+        keys.forEach(k => {
+            const el = document.getElementById('set_' + k);
+            if (el) patch[k] = el.value;
+        });
+        try {
+            await saveSettings(patch);
+            showToast('Website settings saved!', 'success');
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+
+    // ==================== INIT ====================
+    checkSession();
+    </script>
+</body>
+</html>
