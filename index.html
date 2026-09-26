@@ -250,9 +250,12 @@
     ];
 
     let streams11 = [
-        { name: 'Science', subjects: ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'English'] },
-        { name: 'Commerce', subjects: ['Accountancy', 'Business Studies', 'Economics', 'Mathematics', 'English'] },
-        { name: 'Humanities / Arts', subjects: ['History', 'Political Science', 'Geography', 'Economics', 'Sociology', 'Psychology', 'English'] }
+        { classId: '11', className: 'Class 11', name: 'Science', subjects: ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'English'] },
+        { classId: '11', className: 'Class 11', name: 'Commerce', subjects: ['Accountancy', 'Business Studies', 'Economics', 'Mathematics', 'English'] },
+        { classId: '11', className: 'Class 11', name: 'Humanities / Arts', subjects: ['History', 'Political Science', 'Geography', 'Economics', 'Sociology', 'Psychology', 'English'] },
+        { classId: '12', className: 'Class 12', name: 'Science', subjects: ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'English'] },
+        { classId: '12', className: 'Class 12', name: 'Commerce', subjects: ['Accountancy', 'Business Studies', 'Economics', 'Mathematics', 'English'] },
+        { classId: '12', className: 'Class 12', name: 'Humanities / Arts', subjects: ['History', 'Political Science', 'Geography', 'Economics', 'Sociology', 'Psychology', 'English'] }
     ];
 
     const exams = [
@@ -391,22 +394,24 @@
             </div>
         `;
 
-        const teamCard = (m) => `
+        const teamCard = (m) => {
+            const t = navToken(m.id);
+            return `
             <div class="card" style="cursor:default;">
                 ${m.photo_url
                     ? `<img src="${esc(m.photo_url)}"
                             alt="${esc(m.name || 'Team member')}"
-                            onclick="event.stopPropagation(); navigate('team-detail', ${JSON.stringify(m.id)})"
+                            onclick="event.stopPropagation(); openTeamToken('${t}')"
                             style="width:100%;height:240px;object-fit:cover;border-radius:var(--radius-lg);margin-bottom:1rem;cursor:pointer;"
                             title="Open ${esc(m.name || 'team member')} profile"
                             onerror="this.style.display='none'">`
-                    : `<div onclick="navigate('team-detail', ${JSON.stringify(m.id)})"
+                    : `<div onclick="openTeamToken('${t}')"
                             style="width:100%;height:240px;border-radius:var(--radius-lg);margin-bottom:1rem;background:var(--navy-50);display:flex;align-items:center;justify-content:center;font-size:4rem;cursor:pointer;">👤</div>`}
                 <span class="badge">${esc(m.role || 'Team Member')}</span>
                 <h3 style="margin-top:.6rem;">${esc(m.name || '')}</h3>
                 <p style="color:var(--gray-500);margin-bottom:0;">Photo par click karke full profile dekhein →</p>
-            </div>
-        `;
+            </div>`;
+        };
 
         container.innerHTML = `
             <section class="section"><div class="container">
@@ -458,6 +463,12 @@
                             </div>`).join('')}
                     </div>` : ''}
             </div></section>`;
+    }
+
+    function openTeamToken(token) {
+        const id = navValue(token);
+        if (id === null) return;
+        navigate('team-detail', id);
     }
 
     function renderTeamDetail(container, memberId) {
@@ -529,7 +540,6 @@
 
                 const normalizedClass = { id:c.id ?? number, name:c.name || `Class ${number}`, subjects };
 
-                // Classes 1–10 continue to use the normal class flow.
                 if (number <= 10) {
                     classes.push(normalizedClass);
                     subjects.forEach(sub => {
@@ -538,7 +548,6 @@
                     return;
                 }
 
-                // Classes 11–12 now come directly from the admin's class-specific streams.
                 const classStreams = Array.isArray(c.streams) ? c.streams : [];
                 classStreams.forEach(stream => {
                     const streamSubjects = Array.isArray(stream.subjects)
@@ -556,7 +565,6 @@
                 });
             });
 
-            // Backward compatibility: if old data only has global streams, show them for both 11/12.
             if (!streams11.length && Array.isArray(structure.streams)) {
                 [11,12].forEach(number => structure.streams.forEach(stream => {
                     streams11.push({
@@ -596,7 +604,8 @@
             if (error) throw error;
             resources = (data || []).map(item => ({
                 id: item.id, title: item.title || 'Untitled',
-                class: item.class || null, stream: item.stream || null,
+                class: item.class || null, class_id: item.class_id || null,
+                stream: item.stream || null,
                 subject: item.subject || '', chapter: item.chapter || null,
                 type: item.type || 'Notes', difficulty: item.difficulty || 'Medium',
                 tags: Array.isArray(item.tags) ? item.tags : [],
@@ -618,7 +627,8 @@
             if (error) throw error;
             const videos = (data || []).map(item => ({
                 id: `video-${item.id}`, title: item.title || 'Untitled Video',
-                class: item.class || null, stream: item.stream || null,
+                class: item.class || null, class_id: item.class_id || null,
+                stream: item.stream || null,
                 subject: item.subject || '', chapter: item.chapter || null,
                 type: 'Video', difficulty: item.difficulty || 'Medium',
                 tags: [], url: item.youtube_url || item.resource_url || '#',
@@ -758,9 +768,6 @@
     // ==================== HELPERS ====================
     function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
 
-    // Safe navigation token for inline HTML handlers.
-    // Do NOT put JSON.stringify(...) directly inside a double-quoted onclick
-    // attribute: the browser decodes quotes before JavaScript executes.
     function navToken(value) {
         return encodeURIComponent(JSON.stringify(value)).replace(/'/g, '%27');
     }
@@ -791,21 +798,70 @@
         navigate('subject-detail', value);
     }
 
+    function openStreamToken(token) {
+        const value = navValue(token);
+        if (value === null) return;
+        navigate('stream-detail', value);
+    }
+
+    function openSeniorClassToken(token) {
+        const classId = navValue(token);
+        if (classId === null || classId === undefined) return;
+        navigate('senior-class-detail', classId);
+    }
+
+    function openExamToken(token) {
+        const id = navValue(token);
+        if (id === null) return;
+        navigate('exam-detail', id);
+    }
+
+    function openTestToken(token) {
+        const id = navValue(token);
+        if (id === null) return;
+        navigate('test-take', id);
+    }
+
+    function openRoadmapToken(token) {
+        const id = navValue(token);
+        if (id === null) return;
+        navigate('roadmap-detail', id);
+    }
+
+    function viewResourceToken(token) {
+        const id = navValue(token);
+        if (id === null) return;
+        viewResource(id);
+    }
+
+    function saveResourceToken(token) {
+        const id = navValue(token);
+        if (id === null) return;
+        saveResource(id);
+    }
+
     function normalizeAcademicValue(value) {
         return String(value ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
     }
 
     function resourceBelongsToClassSubject(resource, classData, subjectName, streamName = null) {
-        const resourceClass = normalizeAcademicValue(resource?.class);
-        const className = normalizeAcademicValue(classData?.name);
-        const classId = normalizeAcademicValue(classData?.id);
-        const resourceSubject = normalizeAcademicValue(resource?.subject);
-        const subject = normalizeAcademicValue(subjectName);
-        const classMatches = resourceClass === className || resourceClass === classId ||
-            resourceClass === normalizeAcademicValue(String(classData?.name || '').replace(/^class\s*/i, ''));
-        const subjectMatches = resourceSubject === subject;
-        const streamMatches = streamName === null ||
-            normalizeAcademicValue(resource?.stream) === normalizeAcademicValue(streamName);
+        const norm = normalizeAcademicValue;
+        const rClass   = norm(resource?.class);
+        const rClassId = norm(resource?.class_id);
+        const cName    = norm(classData?.name);
+        const cNameN   = norm(String(classData?.name || '').replace(/^class\s*/i, ''));
+        const cId      = norm(classData?.id);
+
+        const classMatches =
+            rClass === cName || rClass === cNameN ||
+            rClass === cId   || rClassId === cId;
+
+        const subjectMatches = norm(resource?.subject) === norm(subjectName);
+
+        const streamMatches = streamName === null
+            ? true
+            : norm(resource?.stream) === norm(streamName);
+
         return classMatches && subjectMatches && streamMatches;
     }
 
@@ -819,17 +875,202 @@
 
     function getSubjectChapters(classData, subject, streamName = null) {
         const configured = Array.isArray(subject?.chapters) ? subject.chapters : [];
+        const configuredNames = configured
+            .map(x => typeof x === 'string' ? x : x?.name)
+            .filter(Boolean);
+
         const dynamic = resources
             .filter(r => resourceBelongsToClassSubject(r, classData, subject?.name, streamName) && r.chapter)
-            .map(r => String(r.chapter).trim()).filter(Boolean);
-        return [...new Set([...configured.map(x => typeof x === 'string' ? x : x?.name), ...dynamic])].filter(Boolean);
+            .map(r => String(r.chapter).trim())
+            .filter(Boolean);
+
+        return [...new Set([...configuredNames, ...dynamic])];
     }
 
     function getSubjectResourceCount(classData, subjectName, streamName = null) {
         return resources.filter(r => resourceBelongsToClassSubject(r, classData, subjectName, streamName)).length;
     }
 
-    // ==================== CLASSES ====================
+    function getSubjectName(s) {
+        return typeof s === 'string' ? s : (s?.name || '');
+    }
+
+    // ==================== HOME ====================
+    function renderHome(container) {
+        container.innerHTML = `
+            <section class="hero">
+                <div class="container hero-content">
+                    <h1>${esc(siteSettings.hero_title || '').replace(/\n/g, '<br>')}</h1>
+                    <p>${esc(siteSettings.hero_subtitle || '')}</p>
+                    <div class="hero-buttons">
+                        <button class="btn btn-gold" onclick="navigate('classes')">${esc(siteSettings.hero_button_1 || '📚 Explore Classes')}</button>
+                        <button class="btn btn-outline" onclick="navigate('exams')">${esc(siteSettings.hero_button_2 || '🎯 Competitive Exams')}</button>
+                    </div>
+                    <div class="search-bar">
+                        <input type="text" placeholder="Search notes, videos, subjects, exams..." id="heroSearchInput"
+                               onkeypress="if(event.key==='Enter'){goToSearchFromHero();}">
+                        <button onclick="goToSearchFromHero()">🔍 Search</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">${esc(siteSettings.quick_access_title || 'Quick Access')}</h2>
+                    <p class="section-subtitle">Jump straight into what you need</p>
+                    <div class="card-grid">
+                        <div class="card" onclick="navigate('classes')">
+                            <div class="card-icon">📖</div>
+                            <h3>Classes 1–10</h3>
+                            <p>Chapter-wise notes, DPPs, videos and more.</p>
+                            <span style="color:var(--gold-600);font-weight:600;">Explore →</span>
+                        </div>
+                        <div class="card" onclick="navigate('classes11')">
+                            <div class="card-icon">🎓</div>
+                            <h3>Classes 11–12</h3>
+                            <p>Science, Commerce and Humanities streams.</p>
+                            <span style="color:var(--gold-600);font-weight:600;">Explore →</span>
+                        </div>
+                        <div class="card" onclick="navigate('exams')">
+                            <div class="card-icon">🎯</div>
+                            <h3>Competitive Exams</h3>
+                            <p>JEE, NEET, UPSC, CUET, NDA, SSC and more.</p>
+                            <span style="color:var(--gold-600);font-weight:600;">Explore →</span>
+                        </div>
+                        <div class="card" onclick="navigate('tests')">
+                            <div class="card-icon">✍️</div>
+                            <h3>Tests & Quizzes</h3>
+                            <p>Practice tests with instant results and explanations.</p>
+                            <span style="color:var(--gold-600);font-weight:600;">Start →</span>
+                        </div>
+                        <div class="card" onclick="navigate('roadmaps')">
+                            <div class="card-icon">🗺️</div>
+                            <h3>Roadmaps</h3>
+                            <p>Structured study plans for your target exam.</p>
+                            <span style="color:var(--gold-600);font-weight:600;">View →</span>
+                        </div>
+                        <div class="card" onclick="navigate('current-affairs')">
+                            <div class="card-icon">📰</div>
+                            <h3>Current Affairs</h3>
+                            <p>Daily, weekly and monthly updates.</p>
+                            <span style="color:var(--gold-600);font-weight:600;">Read →</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            ${resources.length ? `
+            <section class="section section-alt">
+                <div class="container">
+                    <h2 class="section-title">${esc(siteSettings.materials_title || 'Latest Study Materials')}</h2>
+                    <p class="section-subtitle">Hand-picked resources to get you started</p>
+                    <div class="card-grid">
+                        ${resources.slice(0, 6).map(r => resourceCard(r)).join('')}
+                    </div>
+                    <div style="text-align:center;margin-top:2rem;">
+                        <button class="btn btn-navy" onclick="navigate('study-materials')">View All Materials →</button>
+                    </div>
+                </div>
+            </section>` : ''}
+
+            ${roadmaps.length ? `
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title">${esc(siteSettings.roadmaps_title || 'Popular Roadmaps')}</h2>
+                    <p class="section-subtitle">Step-by-step plans trusted by toppers</p>
+                    <div class="card-grid">
+                        ${roadmaps.slice(0, 3).map(r => roadmapCard(r)).join('')}
+                    </div>
+                </div>
+            </section>` : ''}
+
+            ${newsItems.length ? `
+            <section class="section section-alt">
+                <div class="container">
+                    <h2 class="section-title">${esc(siteSettings.news_title || 'Education News')}</h2>
+                    <p class="section-subtitle">Latest updates from the education world</p>
+                    <div class="card-grid">
+                        ${newsItems.slice(0, 3).map(n => newsCard(n)).join('')}
+                    </div>
+                    <div style="text-align:center;margin-top:2rem;">
+                        <button class="btn btn-navy" onclick="navigate('news')">Read All News →</button>
+                    </div>
+                </div>
+            </section>` : ''}
+
+            <section class="section">
+                <div class="container">
+                    <div class="card" style="background:linear-gradient(135deg,#102a43,#243b53);color:white;text-align:center;padding:3rem 1.5rem;cursor:default;">
+                        <h2 style="font-size:2rem;margin-bottom:0.75rem;color:white;">Ready to start learning?</h2>
+                        <p style="color:var(--navy-200);margin-bottom:1.5rem;">Join thousands of students preparing smarter with PADHAKU.</p>
+                        <button class="btn btn-gold" onclick="openLogin()">Student Login</button>
+                    </div>
+                </div>
+            </section>
+        `;
+    }
+
+    function goToSearchFromHero() {
+        const q = document.getElementById('heroSearchInput')?.value || '';
+        navigate('search');
+        setTimeout(() => {
+            const inp = document.getElementById('searchInput');
+            if (inp) { inp.value = q; if (q) performSearch(); }
+        }, 100);
+    }
+
+    // ==================== CARD HELPERS ====================
+    function resourceCard(r) {
+        const img = r.thumbnail_url || r.image_url || '';
+        const idToken = navToken(r.id);
+        return `
+            <div class="card" onclick="viewResourceToken('${idToken}')">
+                ${img ? `<img src="${esc(img)}" style="width:100%;height:150px;object-fit:cover;border-radius:var(--radius-lg);margin-bottom:0.75rem;" onerror="this.style.display='none'">` : ''}
+                <span class="badge badge-gold">${esc(r.type || 'Resource')}</span>
+                <h3 style="margin-top:0.75rem;font-size:1.1rem;">${esc(r.title)}</h3>
+                <p style="font-size:0.875rem;">
+                    ${r.subject ? esc(r.subject) : ''}
+                    ${r.class ? ' • ' + esc(r.class) : ''}
+                    ${r.chapter ? ' • ' + esc(r.chapter) : ''}
+                </p>
+                <div style="display:flex;gap:0.4rem;margin-top:0.5rem;flex-wrap:wrap;">
+                    <button class="btn btn-gold" style="padding:0.4rem 0.9rem;font-size:0.8rem;"
+                            onclick="event.stopPropagation();viewResourceToken('${idToken}')">Open</button>
+                    <button class="btn btn-outline" style="padding:0.4rem 0.9rem;font-size:0.8rem;color:var(--navy-700);border-color:var(--navy-200);"
+                            onclick="event.stopPropagation();saveResourceToken('${idToken}')">Save</button>
+                </div>
+            </div>`;
+    }
+
+    function newsCard(n) {
+        const url = n.article_url || '';
+        return `
+            <div class="card" ${url ? `onclick="window.open('${esc(url)}','_blank','noopener')"` : ''}>
+                ${n.image_url ? `<img src="${esc(n.image_url)}" style="width:100%;height:150px;object-fit:cover;border-radius:var(--radius-lg);margin-bottom:0.75rem;" onerror="this.style.display='none'">` : ''}
+                <span class="badge">${esc(n.category)}</span>
+                <h3 style="margin-top:0.75rem;font-size:1.1rem;">${esc(n.title)}</h3>
+                <p style="font-size:0.9rem;">${esc(n.description)}</p>
+                <p style="font-size:0.8rem;color:var(--gray-500);margin-top:0.5rem;">📅 ${esc(n.date)}</p>
+            </div>`;
+    }
+
+    function roadmapCard(r) {
+        const token = navToken(r.id);
+        return `
+            <div class="card" onclick="openRoadmapToken('${token}')">
+                <div class="card-icon">🗺️</div>
+                <h3>${esc(r.name)}</h3>
+                <p style="font-size:0.9rem;">${esc(r.description)}</p>
+                <div style="display:flex;gap:0.3rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+                    <span class="badge badge-gold">${esc(r.difficulty)}</span>
+                    <span class="badge">${esc(r.duration)}</span>
+                    <span class="badge">${r.steps.length} Phases</span>
+                </div>
+                <span style="color:var(--gold-600);font-weight:600;">View Roadmap →</span>
+            </div>`;
+    }
+
+    // ==================== CLASSES 1-10 ====================
     function renderClasses(container) {
         container.innerHTML = `
             <section class="section">
@@ -837,26 +1078,33 @@
                     <h2 class="section-title">Classes 1–10</h2>
                     <p class="section-subtitle">Select your class to access subjects and chapter-wise resources</p>
                     <div class="card-grid">
-                        ${classes.map(c => `
-                            <div class="card" onclick="navigate('class-detail', ${JSON.stringify(c.id)})">
+                        ${classes.map(c => {
+                            const cidToken = navToken(c.id);
+                            const names = c.subjects.map(getSubjectName);
+                            return `
+                            <div class="card" onclick="openClassToken('${cidToken}')">
                                 <div class="card-icon">📖</div>
                                 <h3>${esc(c.name)}</h3>
                                 <p>${c.subjects.length} Subjects</p>
                                 <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.75rem;">
-                                    ${c.subjects.slice(0,3).map(s => {
-                                        const name = typeof s === 'string' ? s : s.name;
-                                        return `<span class="badge">${esc(name)}</span>`;
-                                    }).join('')}
-                                    ${c.subjects.length > 3 ? `<span class="badge">+${c.subjects.length - 3} more</span>` : ''}
+                                    ${names.slice(0,3).map(n => `<span class="badge">${esc(n)}</span>`).join('')}
+                                    ${names.length > 3 ? `<span class="badge">+${names.length - 3} more</span>` : ''}
                                 </div>
                                 <span style="color:var(--gold-600);font-weight:600;">View Subjects →</span>
-                            </div>
-                        `).join('')}
+                            </div>`;
+                        }).join('')}
                     </div>
                 </div>
             </section>
         `;
     }
+
+    function openClassToken(token) {
+        const id = navValue(token);
+        if (id === null) return;
+        navigate('class-detail', id);
+    }
+
     function renderClassDetail(container, classId) {
         const classData = classes.find(c => String(c.id) === String(classId));
         if (!classData) {
@@ -913,29 +1161,90 @@
         const subjectName = String(param?.subjectName ?? '');
         const streamName = param?.streamName ? String(param.streamName) : null;
 
-        // Senior classes are sourced from class-specific streams.
         if (classId && (classId === '11' || classId === '12' || /class\s*(11|12)/i.test(classId))) {
-            const stream = streams11.find(s => String(s.classId) === classId && normalizeAcademicValue(s.name) === normalizeAcademicValue(streamName));
+            const stream = streams11.find(s =>
+                String(s.classId) === classId &&
+                normalizeAcademicValue(s.name) === normalizeAcademicValue(streamName)
+            );
             const className = stream?.className || `Class ${classId}`;
-            const raw = stream?.subjects?.find(x => normalizeAcademicValue(typeof x==='string'?x:x?.name) === normalizeAcademicValue(subjectName));
-            const subject = raw ? (typeof raw==='string'?{name:raw,chapters:[]}:raw) : {name:subjectName,chapters:[]};
-            if (!subject.name) { container.innerHTML='<section class="section"><div class="container"><p>Subject not found.</p></div></section>'; return; }
-            const classData={id:classId,name:className};
-            const chaptersList=getSubjectChapters(classData,subject,streamName);
-            container.innerHTML=`<section class="section"><div class="container">
-                <button class="btn btn-navy" style="margin-bottom:1.5rem;" onclick="navigate('stream-detail', ${JSON.stringify(stream ? stream.classId+'|'+streams11.filter(s=>String(s.classId)===classId).findIndex(s=>s===stream) : classId+'|0')})">← Back to ${esc(streamName||'Stream')}</button>
-                <h2 class="section-title">${esc(subject.name)}</h2><p class="section-subtitle">${esc(className)} • ${esc(streamName||'')}</p>
-                <div style="display:grid;gap:1rem;margin-top:1.5rem;">${chaptersList.map(ch=>{const rows=getChapterResources(classData,subject.name,ch,streamName);const token=navToken({classId, className, subject:subject.name, chapter:ch, streamName});return `<div class="card"><div style="display:flex;justify-content:space-between;gap:1rem;align-items:center;flex-wrap:wrap;"><div><h3>📖 ${esc(ch)}</h3><p>${rows.length} Resources</p></div><button class="btn btn-gold" onclick="openChapterToken('${token}')">View Resources →</button></div></div>`;}).join('') || '<div class="card"><p>No chapters available yet.</p></div>'}</div>
-            </div></section>`;
+            const raw = stream?.subjects?.find(x => normalizeAcademicValue(getSubjectName(x)) === normalizeAcademicValue(subjectName));
+            const subject = raw
+                ? (typeof raw === 'string' ? { name: raw, chapters: [] } : raw)
+                : { name: subjectName, chapters: [] };
+            if (!subject.name) { container.innerHTML = '<section class="section"><div class="container"><p>Subject not found.</p></div></section>'; return; }
+            const classData = { id: classId, name: className };
+            const chaptersList = getSubjectChapters(classData, subject, streamName);
+            const streamIndex = streams11.filter(s => String(s.classId) === classId).indexOf(stream);
+            const backToken = navToken(`${classId}|${streamIndex >= 0 ? streamIndex : 0}`);
+            container.innerHTML = `
+                <section class="section"><div class="container">
+                    <button class="btn btn-navy" style="margin-bottom:1.5rem;" onclick="openStreamToken('${backToken}')">← Back to ${esc(streamName || 'Stream')}</button>
+                    <h2 class="section-title">${esc(subject.name)}</h2>
+                    <p class="section-subtitle">${esc(className)} • ${esc(streamName || '')}</p>
+                    <div style="display:grid;gap:1rem;margin-top:1.5rem;">
+                        ${chaptersList.map(ch => {
+                            const rows = getChapterResources(classData, subject.name, ch, streamName);
+                            const token = navToken({ classId, className, subject: subject.name, chapter: ch, streamName });
+                            return `<div class="card">
+                                <div style="display:flex;justify-content:space-between;gap:1rem;align-items:center;flex-wrap:wrap;">
+                                    <div><h3>📖 ${esc(ch)}</h3><p>${rows.length} Resources</p></div>
+                                    <button class="btn btn-gold" onclick="openChapterToken('${token}')">View Resources →</button>
+                                </div>
+                            </div>`;
+                        }).join('') || '<div class="card"><p>No chapters available yet.</p></div>'}
+                    </div>
+                </div></section>`;
             return;
         }
 
         const classData = classes.find(c => String(c.id) === classId);
-        if (!classData) { container.innerHTML='<div class="section"><div class="container"><p>Class not found.</p></div></div>'; return; }
-        const rawSubject=classData.subjects.find(s=>normalizeAcademicValue(typeof s==='string'?s:s?.name)===normalizeAcademicValue(subjectName));
-        const subject=rawSubject?(typeof rawSubject==='string'?{name:rawSubject,chapters:[]}:rawSubject):{name:subjectName,chapters:[]};
-        const chaptersList=getSubjectChapters(classData,subject);
-        container.innerHTML=`<section class="section"><div class="container"><button class="btn btn-navy" style="margin-bottom:1.5rem;" onclick="navigate('class-detail',${JSON.stringify(classId)})">← Back to ${esc(classData.name)}</button><h2 class="section-title">${esc(subject.name)}</h2><p class="section-subtitle">Select a chapter to view resources</p><div style="display:grid;gap:1rem;margin-top:1.5rem;">${chaptersList.map(ch=>{const rows=getChapterResources(classData,subject.name,ch);const token=navToken({classId,className:classData.name,subject:subject.name,chapter:ch});return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;"><div><h3>📖 ${esc(ch)}</h3><p>${rows.length} Resources</p></div><button class="btn btn-gold" onclick="openChapterToken('${token}')">View Resources →</button></div></div>`;}).join('')||'<div class="card"><p>No chapters available yet.</p></div>'}</div></div></section>`;
+        if (!classData) { container.innerHTML = '<div class="section"><div class="container"><p>Class not found.</p></div></div>'; return; }
+        const rawSubject = classData.subjects.find(s => normalizeAcademicValue(getSubjectName(s)) === normalizeAcademicValue(subjectName));
+        const subject = rawSubject
+            ? (typeof rawSubject === 'string' ? { name: rawSubject, chapters: [] } : rawSubject)
+            : { name: subjectName, chapters: [] };
+        const chaptersList = getSubjectChapters(classData, subject);
+
+        const backToken = navToken(classId);
+        container.innerHTML = `
+            <section class="section"><div class="container">
+                <button class="btn btn-navy" style="margin-bottom:1.5rem;" onclick="openClassToken('${backToken}')">← Back to ${esc(classData.name)}</button>
+                <h2 class="section-title">${esc(subject.name)}</h2>
+                <p class="section-subtitle">Select a chapter to view resources</p>
+                <div style="display:grid;gap:1rem;margin-top:1.5rem;">
+                    ${chaptersList.map(ch => {
+                        const rows = getChapterResources(classData, subject.name, ch);
+                        const token = navToken({ classId, className: classData.name, subject: subject.name, chapter: ch });
+                        return `<div class="card">
+                            <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;">
+                                <div><h3>📖 ${esc(ch)}</h3><p>${rows.length} Resources</p></div>
+                                <button class="btn btn-gold" onclick="openChapterToken('${token}')">View Resources →</button>
+                            </div>
+                        </div>`;
+                    }).join('') || '<div class="card"><p>No chapters available yet.</p></div>'}
+                </div>
+            </div></section>`;
+    }
+
+    function openChapter(classId, className, subject, chapter, streamName = null) {
+        const classData = classes.find(c => String(c.id) === String(classId)) || { id: classId, name: className };
+        const rows = getChapterResources(classData, subject, chapter, streamName);
+        const mainContent = document.getElementById('mainContent');
+        currentPage = 'chapter-detail';
+        mainContent.innerHTML = `
+            <section class="section"><div class="container">
+                <button class="btn btn-navy" style="margin-bottom:1.5rem;" onclick="navigate('home')">← Back to Home</button>
+                <h2 class="section-title">${esc(chapter)}</h2>
+                <p class="section-subtitle">${esc(className)} • ${esc(subject)}${streamName ? ' • ' + esc(streamName) : ''}</p>
+                <div class="card-grid" style="margin-top:1.5rem;">
+                    ${rows.length ? rows.map(r => resourceCard(r)).join('') : '<p style="color:var(--gray-500);">No resources for this chapter yet.</p>'}
+                </div>
+            </div></section>`;
+    }
+
+    function renderChapterDetail(container, param) {
+        if (!param) { container.innerHTML = '<div class="section"><div class="container"><p>Chapter not found.</p></div></div>'; return; }
+        openChapter(param.classId, param.className, param.subject, param.chapter, param.streamName);
     }
 
     // ==================== CLASSES 11-12 ====================
@@ -947,10 +1256,11 @@
         const seniorClasses = [];
         [11,12].forEach(n => {
             const first = streams11.find(s => String(s.classId) === String(n));
+            if (!first) return;
             seniorClasses.push({
-                id: first?.classId || String(n),
-                name: first?.className || `Class ${n}`,
-                streams: getSeniorStreams(first?.classId || String(n))
+                id: first.classId,
+                name: first.className,
+                streams: getSeniorStreams(first.classId)
             });
         });
         container.innerHTML = `
@@ -965,19 +1275,13 @@
                             <h3>${esc(c.name)}</h3>
                             <p>${c.streams.length} Streams</p>
                             <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.75rem;">
-                                ${c.streams.slice(0,4).map(s=>`<span class="badge">${esc(s.name)}</span>`).join('')}
+                                ${c.streams.slice(0,4).map(s => `<span class="badge">${esc(s.name)}</span>`).join('')}
                             </div>
                             <span style="color:var(--gold-600);font-weight:600;">View Streams →</span>
                         </div>`;
                     }).join('')}
                 </div>
             </div></section>`;
-    }
-
-    function openSeniorClassToken(token) {
-        const classId = navValue(token);
-        if (classId === null || classId === undefined) return;
-        navigate('senior-class-detail', classId);
     }
 
     function renderSeniorClassDetail(container, classId) {
@@ -988,26 +1292,20 @@
             <h2 class="section-title">${esc(className)}</h2>
             <p class="section-subtitle">Select a stream to view its subjects.</p>
             <div class="card-grid">
-                ${streams.map((s,i)=>{
+                ${streams.map((s,i) => {
                     const streamToken = navToken(`${s.classId}|${i}`);
                     return `<div class="card" onclick="openStreamToken('${streamToken}')">
                         <div class="card-icon">🎓</div>
                         <h3>${esc(s.name)}</h3>
                         <p>${s.subjects.length} Subjects</p>
                         <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.75rem;">
-                            ${s.subjects.slice(0,4).map(x=>`<span class="badge">${esc(typeof x==='string'?x:x.name)}</span>`).join('')}
+                            ${s.subjects.slice(0,4).map(x => `<span class="badge">${esc(getSubjectName(x))}</span>`).join('')}
                         </div>
                         <span style="color:var(--gold-600);font-weight:600;">View Subjects →</span>
                     </div>`;
                 }).join('')}
             </div>
         </div></section>`;
-    }
-
-    function openStreamToken(token) {
-        const value = navValue(token);
-        if (value === null) return;
-        navigate('stream-detail', value);
     }
 
     function renderStreamDetail(container, token) {
@@ -1033,25 +1331,25 @@
             <h2 class="section-title">${esc(stream.className)} → ${esc(stream.name)}</h2>
             <p class="section-subtitle">Select a subject.</p>
             <div class="card-grid">
-                ${stream.subjects.map(raw=>{
-                    const s=typeof raw==='string'?{name:raw,chapters:[]}:raw;
-                    const chaptersList=s.chapters||[];
-                    const token=navToken({
-                        classId:stream.classId,
-                        subjectName:s.name,
-                        streamName:stream.name
+                ${stream.subjects.map(raw => {
+                    const s = typeof raw === 'string' ? { name: raw, chapters: [] } : raw;
+                    const chaptersList = Array.isArray(s.chapters) ? s.chapters : [];
+                    const token2 = navToken({
+                        classId: stream.classId,
+                        subjectName: s.name,
+                        streamName: stream.name
                     });
-                    const count=getSubjectResourceCount(
-                        {id:stream.classId,name:stream.className},
+                    const count = getSubjectResourceCount(
+                        { id: stream.classId, name: stream.className },
                         s.name,
                         stream.name
                     );
-                    return `<div class="card" onclick="openSubjectToken('${token}')">
+                    return `<div class="card" onclick="openSubjectToken('${token2}')">
                         <div class="card-icon">📚</div>
                         <h3>${esc(s.name)}</h3>
                         <p>${chaptersList.length} Chapters • ${count} Resources</p>
                         <div style="display:flex;flex-wrap:wrap;gap:.25rem;margin-bottom:.75rem;">
-                            ${chaptersList.slice(0,3).map(ch=>`<span class="badge">${esc(typeof ch==='string'?ch:ch.name)}</span>`).join('')}
+                            ${chaptersList.slice(0,3).map(ch => `<span class="badge">${esc(getSubjectName(ch))}</span>`).join('')}
                         </div>
                         <span style="color:var(--gold-600);font-weight:600;">View Subject →</span>
                     </div>`;
@@ -1068,15 +1366,18 @@
                     <h2 class="section-title">Competitive Exams</h2>
                     <p class="section-subtitle">Prepare for top competitive examinations</p>
                     <div class="card-grid">
-                        ${exams.map(e => `
-                            <div class="card" onclick="navigate('exam-detail', '${e.id}')">
-                                <div class="card-icon">🎯</div>
-                                <h3>${esc(e.name)}</h3>
-                                <p style="font-size:0.9rem;">${esc(e.description)}</p>
-                                <span class="badge badge-gold">${esc(e.category)}</span>
-                                <button class="btn btn-gold" style="padding:0.5rem 1rem; font-size:0.875rem; margin-top:0.75rem; width:100%;">View Details →</button>
-                            </div>
-                        `).join('')}
+                        ${exams.map(e => {
+                            const t = navToken(e.id);
+                            return `
+                                <div class="card" onclick="openExamToken('${t}')">
+                                    <div class="card-icon">🎯</div>
+                                    <h3>${esc(e.name)}</h3>
+                                    <p style="font-size:0.9rem;">${esc(e.description)}</p>
+                                    <span class="badge badge-gold">${esc(e.category)}</span>
+                                    <button class="btn btn-gold" style="padding:0.5rem 1rem; font-size:0.875rem; margin-top:0.75rem; width:100%;">View Details →</button>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             </section>
@@ -1085,7 +1386,7 @@
 
     function renderExamDetail(container, examId) {
         const exam = exams.find(e => e.id === examId);
-        if (!exam) return;
+        if (!exam) { container.innerHTML = '<div class="section"><div class="container"><p>Exam not found.</p></div></div>'; return; }
         const examRoadmap = roadmaps.find(r => String(r.id) === String(examId));
         container.innerHTML = `
             <section class="section">
@@ -1104,7 +1405,7 @@
                             <h3>Practice Tests</h3>
                             <p>Mock tests and practice</p>
                         </div>
-                        ${examRoadmap ? `<div class="card" onclick="navigate('roadmap-detail', '${examRoadmap.id}')">
+                        ${examRoadmap ? `<div class="card" onclick="openRoadmapToken('${navToken(examRoadmap.id)}')">
                             <div class="card-icon">🗺️</div>
                             <h3>Preparation Roadmap</h3>
                             <p>${esc(examRoadmap.duration)} structured plan</p>
@@ -1138,7 +1439,7 @@
         document.querySelectorAll('#materialFilters .tab').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
         const filtered = type === 'all' ? resources : resources.filter(r => r.type === type);
-        document.getElementById('materialsGrid').innerHTML = filtered.length > 0 
+        document.getElementById('materialsGrid').innerHTML = filtered.length > 0
             ? filtered.map(r => resourceCard(r)).join('')
             : '<p>No materials found.</p>';
     }
@@ -1157,8 +1458,21 @@
                 </div>
                 <a href="${esc(imageUrl)}" target="_blank" rel="noopener noreferrer" download style="color:#fff;text-decoration:underline;">Open / Download Image</a>
             </div>`;
-        modal.onclick=e=>{if(e.target===modal)modal.remove();};
+        modal.onclick = e => { if (e.target === modal) modal.remove(); };
         document.body.appendChild(modal);
+    }
+
+    function getYouTubeEmbedUrl(url) {
+        if (!url) return null;
+        try {
+            const u = new URL(url);
+            let id = '';
+            if (u.hostname.includes('youtu.be')) id = u.pathname.slice(1);
+            else if (u.hostname.includes('youtube.com')) id = u.searchParams.get('v') || (u.pathname.startsWith('/embed/') ? u.pathname.split('/embed/')[1] : '');
+            if (!id) return null;
+            id = id.split('&')[0].split('?')[0];
+            return `https://www.youtube.com/embed/${id}`;
+        } catch (e) { return null; }
     }
 
     function viewResource(id) {
@@ -1230,18 +1544,21 @@
                     <h2 class="section-title">Tests & Quizzes</h2>
                     <p class="section-subtitle">Practice and assess your knowledge</p>
                     <div class="card-grid">
-                        ${tests.length > 0 ? tests.map(t => `
-                            <div class="card" onclick="navigate('test-take', ${t.id})">
-                                <div class="card-icon">✍️</div>
-                                <h3 style="font-size:1.1rem;">${esc(t.title)}</h3>
-                                <p>${t.questions.length} Questions • ${t.duration} minutes</p>
-                                <div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-bottom:0.75rem;">
-                                    ${t.class ? `<span class="badge">${esc(t.class)}</span>` : ''}
-                                    <span class="badge badge-gold">${esc(t.subject)}</span>
+                        ${tests.length > 0 ? tests.map(t => {
+                            const token = navToken(t.id);
+                            return `
+                                <div class="card" onclick="openTestToken('${token}')">
+                                    <div class="card-icon">✍️</div>
+                                    <h3 style="font-size:1.1rem;">${esc(t.title)}</h3>
+                                    <p>${t.questions.length} Questions • ${t.duration} minutes</p>
+                                    <div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-bottom:0.75rem;">
+                                        ${t.class ? `<span class="badge">${esc(t.class)}</span>` : ''}
+                                        <span class="badge badge-gold">${esc(t.subject)}</span>
+                                    </div>
+                                    <button class="btn btn-gold" style="padding:0.5rem 1rem; font-size:0.875rem; width:100%;">Start Test</button>
                                 </div>
-                                <button class="btn btn-gold" style="padding:0.5rem 1rem; font-size:0.875rem; width:100%;">Start Test</button>
-                            </div>
-                        `).join('') : '<p style="color:var(--gray-500);">No tests available yet.</p>'}
+                            `;
+                        }).join('') : '<p style="color:var(--gray-500);">No tests available yet.</p>'}
                     </div>
                 </div>
             </section>
@@ -1438,7 +1755,7 @@
                     ${roadmap.diagram_url ? `<img src="${esc(roadmap.diagram_url)}" style="max-width:100%;border-radius:var(--radius-lg);margin-bottom:2rem;" onerror="this.style.display='none'">` : ''}
                     <div style="display:flex; flex-direction:column; gap:1.5rem;">
                         ${roadmap.steps.map((step, idx) => `
-                            <div class="card" style="display:flex; gap:1.5rem; align-items:start;">
+                            <div class="card" style="display:flex; gap:1.5rem; align-items:start; cursor:default;">
                                 <div style="background:var(--gold-500); color:white; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; flex-shrink:0;">${idx + 1}</div>
                                 <div style="flex:1;">
                                     <h3 style="color:var(--gold-600); font-size:1rem;">${esc(step.month)}</h3>
@@ -1478,31 +1795,100 @@
         const query = (document.getElementById('heroSearchInput')?.value || document.getElementById('searchInput')?.value || '').toLowerCase().trim();
         if (!query) { showToast('Enter a search term'); return; }
         const results = [];
+
         resources.forEach(r => {
             const text = `${r.title} ${r.class || ''} ${r.subject || ''} ${r.chapter || ''} ${(r.tags || []).join(' ')}`.toLowerCase();
-            if (text.includes(query)) results.push({ type: 'Resource', title: r.title, subtitle: `${r.type} • ${r.subject} • ${r.class || ''}`, action: `viewResource('${esc(r.id)}')` });
+            if (text.includes(query)) {
+                results.push({
+                    type: 'Resource',
+                    title: r.title,
+                    subtitle: `${r.type} • ${r.subject} • ${r.class || ''}`,
+                    action: `viewResourceToken('${navToken(r.id)}')`
+                });
+            }
         });
+
         classes.forEach(c => {
-            if (c.name.toLowerCase().includes(query)) results.push({ type: 'Class', title: c.name, subtitle: c.subjects.join(', '), action: `navigate('class-detail', '${c.id}')` });
+            if (c.name.toLowerCase().includes(query)) {
+                results.push({
+                    type: 'Class',
+                    title: c.name,
+                    subtitle: c.subjects.map(getSubjectName).join(', '),
+                    action: `openClassToken('${navToken(c.id)}')`
+                });
+            }
             c.subjects.forEach(s => {
-                if (s.toLowerCase().includes(query)) results.push({ type: 'Subject', title: s, subtitle: c.name, action: `navigate('subject-detail', '${c.id}-${esc(s)}')` });
+                const name = getSubjectName(s);
+                if (!name) return;
+                if (name.toLowerCase().includes(query)) {
+                    results.push({
+                        type: 'Subject',
+                        title: name,
+                        subtitle: c.name,
+                        action: `openClassSubjectToken('${navToken({ classId: c.id, subjectName: name })}')`
+                    });
+                }
             });
         });
+
         streams11.forEach((stream, idx) => {
-            if (stream.name.toLowerCase().includes(query)) results.push({ type: 'Stream', title: stream.name, subtitle: stream.subjects.join(', '), action: `navigate('stream-detail', ${idx})` });
+            if (stream.name.toLowerCase().includes(query)) {
+                results.push({
+                    type: 'Stream',
+                    title: stream.name,
+                    subtitle: stream.subjects.map(getSubjectName).join(', '),
+                    action: `openStreamToken('${navToken(stream.classId + '|' + idx)}')`
+                });
+            }
             stream.subjects.forEach(s => {
-                if (s.toLowerCase().includes(query)) results.push({ type: 'Subject', title: s, subtitle: stream.name, action: `navigate('subject-detail', '11-${esc(s)}')` });
+                const name = getSubjectName(s);
+                if (!name) return;
+                if (name.toLowerCase().includes(query)) {
+                    results.push({
+                        type: 'Subject',
+                        title: name,
+                        subtitle: `${stream.className} • ${stream.name}`,
+                        action: `openSubjectToken('${navToken({ classId: stream.classId, subjectName: name, streamName: stream.name })}')`
+                    });
+                }
             });
         });
+
         exams.forEach(e => {
-            if (e.name.toLowerCase().includes(query) || e.category.toLowerCase().includes(query)) results.push({ type: 'Exam', title: e.name, subtitle: e.description, action: `navigate('exam-detail', '${e.id}')` });
+            if (e.name.toLowerCase().includes(query) || e.category.toLowerCase().includes(query)) {
+                results.push({
+                    type: 'Exam',
+                    title: e.name,
+                    subtitle: e.description,
+                    action: `openExamToken('${navToken(e.id)}')`
+                });
+            }
         });
+
         roadmaps.forEach(r => {
-            if (r.name.toLowerCase().includes(query)) results.push({ type: 'Roadmap', title: r.name, subtitle: r.description, action: `navigate('roadmap-detail', '${r.id}')` });
+            if (r.name.toLowerCase().includes(query)) {
+                results.push({
+                    type: 'Roadmap',
+                    title: r.name,
+                    subtitle: r.description,
+                    action: `openRoadmapToken('${navToken(r.id)}')`
+                });
+            }
         });
+
         newsItems.forEach(n => {
-            if (n.title.toLowerCase().includes(query) || n.category.toLowerCase().includes(query)) results.push({ type: 'News', title: n.title, subtitle: n.category, action: `navigate('news')` });
+            if (n.title.toLowerCase().includes(query) || n.category.toLowerCase().includes(query)) {
+                results.push({
+                    type: 'News',
+                    title: n.title,
+                    subtitle: n.category,
+                    action: n.article_url
+                        ? `window.open('${esc(n.article_url)}','_blank','noopener')`
+                        : `navigate('news')`
+                });
+            }
         });
+
         const rc = document.getElementById('searchResults');
         if (rc) {
             rc.innerHTML = results.length === 0
@@ -1577,10 +1963,10 @@
                         <button class="btn btn-outline" style="color:var(--navy-700); border-color:var(--navy-200);" onclick="logout()">Logout</button>
                     </div>
                     <div class="card-grid" style="margin-bottom:2rem;">
-                        <div class="card" style="text-align:center;"><div style="font-size:2.5rem;">🔥</div><h3>Study Streak</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">3 Days</p></div>
-                        <div class="card" style="text-align:center;"><div style="font-size:2.5rem;">✅</div><h3>Completed</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">${completedChapters.length}</p></div>
-                        <div class="card" style="text-align:center;"><div style="font-size:2.5rem;">📊</div><h3>Tests Taken</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">${testHistory.length}</p></div>
-                        <div class="card" style="text-align:center;"><div style="font-size:2.5rem;">📌</div><h3>Saved</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">${savedResources.length}</p></div>
+                        <div class="card" style="text-align:center;cursor:default;"><div style="font-size:2.5rem;">🔥</div><h3>Study Streak</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">3 Days</p></div>
+                        <div class="card" style="text-align:center;cursor:default;"><div style="font-size:2.5rem;">✅</div><h3>Completed</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">${completedChapters.length}</p></div>
+                        <div class="card" style="text-align:center;cursor:default;"><div style="font-size:2.5rem;">📊</div><h3>Tests Taken</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">${testHistory.length}</p></div>
+                        <div class="card" style="text-align:center;cursor:default;"><div style="font-size:2.5rem;">📌</div><h3>Saved</h3><p style="font-size:2rem; font-weight:700; color:var(--gold-600);">${savedResources.length}</p></div>
                     </div>
                     <h3 style="margin-bottom:1rem;">Recent Activity</h3>
                     <div class="card-grid" style="margin-bottom:2rem;">
@@ -1589,7 +1975,7 @@
                     <h3 style="margin-bottom:1rem;">Test History</h3>
                     <div class="card-grid">
                         ${testHistory.slice(0, 5).map(t => `
-                            <div class="card">
+                            <div class="card" style="cursor:default;">
                                 <h4 style="font-size:1.1rem;">${esc(t.title)}</h4>
                                 <p style="font-size:1.5rem; font-weight:700; color:${t.percentage >= 60 ? 'green' : t.percentage >= 40 ? 'orange' : 'red'}; margin:0.5rem 0;">${t.percentage.toFixed(1)}%</p>
                                 <p>Score: ${t.score}/${t.total}</p>
@@ -1604,6 +1990,7 @@
     // ==================== TOAST ====================
     function showToast(message) {
         const toast = document.getElementById('toast');
+        if (!toast) { console.log('Toast:', message); return; }
         toast.textContent = message;
         toast.classList.remove('hidden');
         clearTimeout(toast._timeout);
@@ -1623,12 +2010,13 @@
 
     async function initializeApp() {
         console.log('🚀 Initializing PADHAKU...');
+        renderHome(document.getElementById('mainContent'));
         await loadSiteSettings();
         await loadAcademicStructure();
         await loadAboutPadhakuFromSupabase();
         await loadAllPublicData();
         console.log('✅ Loaded:', { classes: classes.length, resources: resources.length, news: newsItems.length, ca: currentAffairs.length, roadmaps: roadmaps.length, tests: tests.length });
-        renderHome(document.getElementById('mainContent'));
+        if (currentPage === 'home') renderHome(document.getElementById('mainContent'));
     }
 
     initializeApp();
