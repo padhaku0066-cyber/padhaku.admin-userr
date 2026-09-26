@@ -80,10 +80,11 @@
         .badge-draft { background: var(--gray-100); color: var(--gray-500); }
         .badge-admin { background: var(--gold-100); color: var(--gold-600); }
         .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s; }
-        .modal { background: var(--white); border-radius: var(--radius-xl); padding: 2rem; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s; }
+        .modal { background: var(--white); border-radius: var(--radius-xl); padding: 2rem; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s; position: relative; }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; background: transparent; font-size: 1.5rem; color: var(--gray-500); }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--navy-900); color: var(--white); padding: 1rem 1.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); z-index: 300; animation: slideUp 0.3s; }
+        .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--navy-900); color: var(--white); padding: 1rem 1.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); z-index: 300; animation: slideUp 0.3s; max-width: 90vw; }
         .toast-success { background: var(--green-500); }
         .toast-error { background: var(--red-500); }
         .hidden { display: none !important; }
@@ -179,6 +180,7 @@
     // ==================== SUPABASE ====================
     const SUPABASE_URL = 'https://ozrvpbziwpkfkejafjnm.supabase.co';
     const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_aeCYoS9jRAAqPHIGa6Uz6Q_XY_7l7Lj';
+    const SITE_MEDIA_BUCKET = 'site-media'; // ✅ FIX: hoisted so it's always available
     let supabaseClient = null;
 
     function initializeSupabase() {
@@ -252,7 +254,18 @@
         if (type === 'success') toast.classList.add('toast-success');
         else if (type === 'error') toast.classList.add('toast-error');
         clearTimeout(toast._timeout);
-        toast._timeout = setTimeout(() => toast.classList.add('hidden'), 3000);
+        toast._timeout = setTimeout(() => toast.classList.add('hidden'), 4000);
+    }
+
+    // ✅ FIX: friendly error translator
+    function friendlyError(e) {
+        const msg = String(e?.message || e || 'Unknown error');
+        if (/bucket.*not.*found/i.test(msg)) return 'Storage bucket "site-media" missing. Create it in Supabase (see instructions).';
+        if (/row-level security|permission denied|violates row-level/i.test(msg)) return 'Permission denied by Supabase RLS. Check your policies on this table.';
+        if (/relation .* does not exist|column .* does not exist/i.test(msg)) return msg + ' — a table or column is missing in Supabase.';
+        if (/duplicate key/i.test(msg)) return 'A record with this value already exists.';
+        if (/Invalid login credentials/i.test(msg)) return 'Wrong email or password.';
+        return msg;
     }
 
     async function getSettings() {
@@ -275,13 +288,7 @@
     }
 
     async function saveStructure(structure) {
-        if (isContentManager()) {
-            const { error } = await supabaseClient.rpc('update_academic_structure', {
-                p_structure: structure
-            });
-            if (error) throw error;
-            return;
-        }
+        // ✅ FIX: don't rely on optional RPC — both roles go through saveSettings
         await saveSettings({ academic_structure: structure });
     }
 
@@ -314,7 +321,7 @@
         } catch (e) {
             console.error(e);
             await supabaseClient.auth.signOut();
-            showLoginError(e.message || 'Unable to verify admin.');
+            showLoginError(friendlyError(e));
             return false;
         }
     }
@@ -331,7 +338,7 @@
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) throw error;
             if (data.user) await verifyAdmin(data.user);
-        } catch (e) { showLoginError(e.message || 'Login failed'); }
+        } catch (e) { showLoginError(friendlyError(e)); }
         finally { showLoginLoading(false); }
     }
 
@@ -473,7 +480,7 @@
                 </div>
             `;
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p>`;
         }
     }
 
@@ -515,7 +522,7 @@
                 </div>
             `;
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p>`;
         }
     }
 
@@ -542,7 +549,7 @@
             const { data, error } = await supabaseClient.from('materials').select('*').eq('id', id).single();
             if (error) throw error;
             document.getElementById('materialFormContent').innerHTML = materialFormHTML(data);
-        } catch (e) { showToast('Error loading: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error loading: ' + friendlyError(e), 'error'); }
     }
 
     function materialFormHTML(m = null) {
@@ -590,7 +597,7 @@
             document.querySelector('.modal-overlay')?.remove();
             showToast('Material saved!', 'success');
             switchPage('materials');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     async function deleteMaterial(id) {
@@ -600,7 +607,7 @@
             if (error) throw error;
             showToast('Deleted', 'success');
             switchPage('materials');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     function filterTable(tableId, query) {
@@ -613,8 +620,6 @@
     }
 
     // ==================== ABOUT PADHAKU ====================
-
-    const SITE_MEDIA_BUCKET = 'site-media';
 
     function mediaSafeName(name) {
         return String(name || 'file')
@@ -645,8 +650,6 @@
         return data.publicUrl;
     }
 
-    // Generic image upload used by every image field in the admin panel.
-    // The public URL is written into the matching DB URL field, so the user panel can display it after publish.
     window.handleAdminImageUpload = async function(input, targetInputId, folder, previewId = null) {
         const file = input?.files?.[0];
         if (!file) return;
@@ -679,7 +682,7 @@
             showToast('Image uploaded successfully ✓', 'success');
         } catch (e) {
             console.error('Image upload:', e);
-            showToast('Image upload failed: ' + e.message, 'error');
+            showToast('Image upload failed: ' + friendlyError(e), 'error');
         } finally {
             input.value = '';
         }
@@ -783,7 +786,7 @@
             if (field) field.value = url;
             showToast('Owner photo uploaded.', 'success');
         } catch (e) {
-            showToast('Photo upload failed: ' + e.message + ' (You can also paste an image URL.)', 'error');
+            showToast('Photo upload failed: ' + friendlyError(e) + ' (You can also paste an image URL.)', 'error');
         } finally { input.value = ''; }
     };
 
@@ -796,7 +799,7 @@
             if (field) field.value = url;
             showToast('Voice message uploaded.', 'success');
         } catch (e) {
-            showToast('Voice upload failed: ' + e.message + ' (You can also paste an audio URL.)', 'error');
+            showToast('Voice upload failed: ' + friendlyError(e) + ' (You can also paste an audio URL.)', 'error');
         } finally { input.value = ''; }
     };
 
@@ -809,7 +812,7 @@
             if (field) field.value = url;
             showToast('Divyansh Mishra photo uploaded.', 'success');
         } catch (e) {
-            showToast('Divyansh photo upload failed: ' + e.message, 'error');
+            showToast('Divyansh photo upload failed: ' + friendlyError(e), 'error');
         } finally { input.value = ''; }
     };
 
@@ -822,7 +825,7 @@
             if (field) field.value = url;
             showToast('Divyansh Mishra voice uploaded.', 'success');
         } catch (e) {
-            showToast('Divyansh voice upload failed: ' + e.message, 'error');
+            showToast('Divyansh voice upload failed: ' + friendlyError(e), 'error');
         } finally { input.value = ''; }
     };
 
@@ -840,7 +843,7 @@
             showToast(`${files.length} photo(s) added to gallery.`, 'success');
             await renderAboutPadhaku(document.getElementById('pageContent'));
         } catch (e) {
-            showToast('Gallery upload failed: ' + e.message + '. You can add photos individually using image URLs too.', 'error');
+            showToast('Gallery upload failed: ' + friendlyError(e) + '. You can add photos individually using image URLs too.', 'error');
         } finally { input.value = ''; }
     };
 
@@ -852,7 +855,7 @@
             await saveAboutState(about);
             showToast('Gallery image removed.', 'success');
             await renderAboutPadhaku(document.getElementById('pageContent'));
-        } catch (e) { showToast('Could not remove image: ' + e.message, 'error'); }
+        } catch (e) { showToast('Could not remove image: ' + friendlyError(e), 'error'); }
     };
 
     function teamEditorHTML(member, index) {
@@ -915,7 +918,7 @@
             const url = await uploadSiteMedia(file, 'about/team/photos');
             document.getElementById('teamPhotoUrl').value = url;
             showToast('Team photo uploaded.', 'success');
-        } catch (e) { showToast('Team photo upload failed: ' + e.message + ' (paste URL instead if storage is not configured.)', 'error'); }
+        } catch (e) { showToast('Team photo upload failed: ' + friendlyError(e) + ' (paste URL instead if storage is not configured.)', 'error'); }
         finally { input.value = ''; }
     };
 
@@ -925,7 +928,7 @@
             const url = await uploadSiteMedia(file, 'about/team/voice');
             document.getElementById('teamVoiceUrl').value = url;
             showToast('Team voice uploaded.', 'success');
-        } catch (e) { showToast('Team voice upload failed: ' + e.message + ' (paste URL instead if storage is not configured.)', 'error'); }
+        } catch (e) { showToast('Team voice upload failed: ' + friendlyError(e) + ' (paste URL instead if storage is not configured.)', 'error'); }
         finally { input.value = ''; }
     };
 
@@ -938,7 +941,7 @@
             const holder = document.createElement('div');
             holder.innerHTML = teamEditorHTML(member, index);
             document.getElementById('modalContainer').appendChild(holder.firstElementChild);
-        } catch (e) { showToast('Could not open team editor: ' + e.message, 'error'); }
+        } catch (e) { showToast('Could not open team editor: ' + friendlyError(e), 'error'); }
     };
 
     window.saveTeamMemberDirect = async function(index) {
@@ -972,7 +975,7 @@
             document.querySelector('#modalContainer .modal-overlay')?.remove();
             showToast(index === null ? 'Team member added.' : 'Team member updated.', 'success');
             await renderAboutPadhaku(document.getElementById('pageContent'));
-        } catch (e) { showToast('Could not save team member: ' + e.message, 'error'); }
+        } catch (e) { showToast('Could not save team member: ' + friendlyError(e), 'error'); }
     };
 
     window.toggleTeamMemberDirect = async function(index) {
@@ -985,7 +988,7 @@
             await saveAboutState(about);
             showToast(about.team[index].visible ? 'Team member shown.' : 'Team member hidden.', 'success');
             await renderAboutPadhaku(document.getElementById('pageContent'));
-        } catch (e) { showToast('Could not change visibility: ' + e.message, 'error'); }
+        } catch (e) { showToast('Could not change visibility: ' + friendlyError(e), 'error'); }
     };
 
     window.deleteTeamMemberDirect = async function(index) {
@@ -999,7 +1002,7 @@
             await saveAboutState(about);
             showToast('Team member deleted.', 'success');
             await renderAboutPadhaku(document.getElementById('pageContent'));
-        } catch (e) { showToast('Could not delete team member: ' + e.message, 'error'); }
+        } catch (e) { showToast('Could not delete team member: ' + friendlyError(e), 'error'); }
     };
 
     async function renderAboutPadhaku(container) {
@@ -1137,7 +1140,7 @@
             `;
         } catch (e) {
             console.error(e);
-            container.innerHTML = `<div class="card"><p style="color:var(--red-500);">Error: ${esc(e.message)}</p></div>`;
+            container.innerHTML = `<div class="card"><p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p></div>`;
         }
     }
 
@@ -1169,10 +1172,10 @@
             await saveAboutState(about);
             showToast('About Padhaku saved successfully.', 'success');
             await renderAboutPadhaku(document.getElementById('pageContent'));
-        } catch (e) { showToast('Could not save About Padhaku: ' + e.message, 'error'); }
+        } catch (e) { showToast('Could not save About Padhaku: ' + friendlyError(e), 'error'); }
     };
 
-    // ==================== SUBJECTS (Classes 1–12 → Subject → Chapter → Resources) ====================
+    // ==================== SUBJECTS ====================
 
     const subjectManager = {
         structure: null,
@@ -1273,7 +1276,6 @@
         subjectManager.materials = data || [];
         if (subjectManager.classIndex >= normalized.classes.length) subjectManager.classIndex = 0;
 
-        // Save the normalized 11/12 stream structure once, without touching existing resources.
         if (JSON.stringify(structure) !== JSON.stringify(normalized)) await saveStructure(normalized);
     }
 
@@ -1334,7 +1336,7 @@
             modal.innerHTML=`<div class="modal" style="max-width:520px;"><button class="modal-close" onclick="this.closest('.modal-overlay').remove()">×</button><h2>${esc(title)}</h2><p style="color:var(--gray-500);margin:1rem 0;">${esc(helpText)}</p><div class="form-group"><label>Name *</label><input id="subjectManagerName" class="form-input" placeholder="${esc(placeholder)}"></div><div style="display:flex;gap:.5rem;justify-content:flex-end;"><button class="btn btn-outline" onclick="this.closest('.modal-overlay').remove()">Cancel</button><button class="btn btn-gold" id="subjectManagerSave">Save</button></div></div>`;
             document.getElementById('modalContainer').appendChild(modal);
             const input=modal.querySelector('#subjectManagerName'), btn=modal.querySelector('#subjectManagerSave');
-            const submit=async()=>{const name=input.value.trim();if(!name){showToast('Please enter a name.','error');return;}btn.disabled=true;try{await onSave(name);modal.remove();resolve(true);}catch(e){showToast('Error: '+e.message,'error');btn.disabled=false;}};
+            const submit=async()=>{const name=input.value.trim();if(!name){showToast('Please enter a name.','error');return;}btn.disabled=true;try{await onSave(name);modal.remove();resolve(true);}catch(e){showToast('Error: '+friendlyError(e),'error');btn.disabled=false;}};
             btn.onclick=submit; input.onkeydown=e=>{if(e.key==='Enter')submit();if(e.key==='Escape')modal.remove()}; setTimeout(()=>input.focus(),30);
         });
     }
@@ -1383,14 +1385,26 @@
             const payload={title:modal.querySelector('#smrTitle').value.trim(),description:modal.querySelector('#smrDescription').value.trim(),class:className,stream:streamName||null,subject:subjectName,chapter:chapterName,type:modal.querySelector('#smrType').value,thumbnail_url:modal.querySelector('#smrThumbnail').value.trim(),youtube_url:modal.querySelector('#smrYoutube').value.trim(),resource_url:modal.querySelector('#smrResourceUrl').value.trim(),download_url:modal.querySelector('#smrDownload').value.trim()||null,published:modal.querySelector('#smrPublished').checked};
             if(!payload.title){showToast('Resource title is required.','error');return;}
             const btn=modal.querySelector('#subjectResourceSave');btn.disabled=true;btn.textContent='Saving...';
-            try{let result=resource?.id?await supabaseClient.from('materials').update(payload).eq('id',resource.id):await supabaseClient.from('materials').insert(payload).select();if(result.error&&/download_url|column/i.test(result.error.message||'')){const fallback={...payload};delete fallback.download_url;result=resource?.id?await supabaseClient.from('materials').update(fallback).eq('id',resource.id):await supabaseClient.from('materials').insert(fallback).select();}if(result.error)throw result.error;modal.remove();showToast(resource?.id?'Resource updated.':'Resource added.','success');await refreshSubjectManager();}catch(e){console.error(e);showToast('Error: '+e.message,'error');btn.disabled=false;btn.textContent='Save Resource';}
+            try{
+                let result;
+                if(resource?.id) result=await supabaseClient.from('materials').update(payload).eq('id',resource.id);
+                else result=await supabaseClient.from('materials').insert(payload).select();
+                // ✅ FIX: fallback if stream or download_url column missing
+                if(result.error && /column .* does not exist|stream|download_url/i.test(result.error.message||'')){
+                    const fallback={...payload}; delete fallback.stream; delete fallback.download_url;
+                    if(resource?.id) result=await supabaseClient.from('materials').update(fallback).eq('id',resource.id);
+                    else result=await supabaseClient.from('materials').insert(fallback).select();
+                }
+                if(result.error)throw result.error;
+                modal.remove();showToast(resource?.id?'Resource updated.':'Resource added.','success');await refreshSubjectManager();
+            }catch(e){console.error(e);showToast('Error: '+friendlyError(e),'error');btn.disabled=false;btn.textContent='Save Resource';}
         };
     }
 
     window.subjectAddResource=async function(subjectIndex,chapterName){const c=subjectManager.structure.classes[subjectManager.classIndex],sub=subjectObject(c.subjects[subjectIndex]);await openSubjectResourceModal(null,c.name,sub.name,chapterName,'');};
     window.subjectAddStreamResource=async function(streamIndex,subjectIndex,chapterName){const c=subjectManager.structure.classes[subjectManager.classIndex],stream=getCurrentStreams(c)[Number(streamIndex)],sub=subjectObject(stream?.subjects?.[Number(subjectIndex)]);if(!stream||!sub)return;await openSubjectResourceModal(null,c.name,sub.name,chapterName,stream.name);};
     window.subjectEditResource=async function(resourceId){const r=subjectManager.materials.find(m=>String(m.id)===String(resourceId));if(!r){showToast('Resource not found.','error');return;}await openSubjectResourceModal(r,r.class,r.subject,r.chapter,r.stream||'');};
-    window.subjectDeleteResource=async function(resourceId){if(!confirm('Delete this resource?'))return;const {error}=await supabaseClient.from('materials').delete().eq('id',resourceId);if(error){showToast('Error: '+error.message,'error');return;}showToast('Resource deleted.','success');await refreshSubjectManager();};
+    window.subjectDeleteResource=async function(resourceId){if(!confirm('Delete this resource?'))return;const {error}=await supabaseClient.from('materials').delete().eq('id',resourceId);if(error){showToast('Error: '+friendlyError(error),'error');return;}showToast('Resource deleted.','success');await refreshSubjectManager();};
 
     window.subjectAddSubject=async function(){
         const c=subjectManager.structure.classes[subjectManager.classIndex];
@@ -1417,7 +1431,7 @@
             subjectManagerRender();
         } catch (error) {
             console.error('Subject workspace:', error);
-            container.innerHTML = `<div class="card"><p style="color:var(--red-500);">Error loading subjects: ${esc(error.message)}</p></div>`;
+            container.innerHTML = `<div class="card"><p style="color:var(--red-500);">Error loading subjects: ${esc(friendlyError(error))}</p></div>`;
         }
     }
 
@@ -1456,7 +1470,7 @@
                 </div>
             `;
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p>`;
         }
     }
 
@@ -1483,7 +1497,7 @@
             const { data, error } = await supabaseClient.from('videos').select('*').eq('id', id).single();
             if (error) throw error;
             document.getElementById('videoFormContent').innerHTML = videoFormHTML(data);
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     function videoFormHTML(v = null) {
@@ -1525,7 +1539,7 @@
             document.querySelector('.modal-overlay')?.remove();
             showToast('Video saved!', 'success');
             switchPage('videos');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     async function deleteVideo(id) {
@@ -1535,7 +1549,7 @@
             if (error) throw error;
             showToast('Deleted', 'success');
             switchPage('videos');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     // ==================== NEWS ====================
@@ -1572,7 +1586,7 @@
                 </div>
             `;
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p>`;
         }
     }
 
@@ -1599,7 +1613,7 @@
             const { data, error } = await supabaseClient.from('news').select('*').eq('id', id).single();
             if (error) throw error;
             document.getElementById('newsFormContent').innerHTML = newsFormHTML(data);
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     function newsFormHTML(n = null) {
@@ -1636,7 +1650,7 @@
             document.querySelector('.modal-overlay')?.remove();
             showToast('News saved!', 'success');
             switchPage('news');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     async function deleteNews(id) {
@@ -1646,7 +1660,7 @@
             if (error) throw error;
             showToast('Deleted', 'success');
             switchPage('news');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     // ==================== CURRENT AFFAIRS ====================
@@ -1684,7 +1698,7 @@
                 </div>
             `;
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p>`;
         }
     }
 
@@ -1711,7 +1725,7 @@
             const { data, error } = await supabaseClient.from('current_affairs').select('*').eq('id', id).single();
             if (error) throw error;
             document.getElementById('caFormContent').innerHTML = caFormHTML(data);
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     function caFormHTML(a = null) {
@@ -1749,7 +1763,7 @@
             document.querySelector('.modal-overlay')?.remove();
             showToast('Entry saved!', 'success');
             switchPage('current-affairs');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     async function deleteCurrentAffair(id) {
@@ -1759,7 +1773,7 @@
             if (error) throw error;
             showToast('Deleted', 'success');
             switchPage('current-affairs');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     // ==================== TESTS ====================
@@ -1797,7 +1811,7 @@
                 </div>
             `;
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p>`;
         }
     }
 
@@ -1835,7 +1849,7 @@
                 correct_answer: q.correct_answer, explanation: q.explanation
             }));
             renderQuestionsList();
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     function testFormHTML(t = null) {
@@ -1917,7 +1931,7 @@
             document.querySelector('.modal-overlay')?.remove();
             showToast('Test saved!', 'success');
             switchPage('tests');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     async function deleteTest(id) {
@@ -1927,7 +1941,7 @@
             if (error) throw error;
             showToast('Deleted', 'success');
             switchPage('tests');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     // ==================== ROADMAPS ====================
@@ -1964,7 +1978,7 @@
                 </div>
             `;
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p>`;
         }
     }
 
@@ -2002,7 +2016,7 @@
                 topics: (s.topics || []).join(', ')
             }));
             renderStepsList();
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     function roadmapFormHTML(r = null) {
@@ -2080,7 +2094,7 @@
             document.querySelector('.modal-overlay')?.remove();
             showToast('Roadmap saved!', 'success');
             switchPage('roadmaps');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     async function deleteRoadmap(id) {
@@ -2090,7 +2104,7 @@
             if (error) throw error;
             showToast('Deleted', 'success');
             switchPage('roadmaps');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     // ==================== STUDENTS ====================
@@ -2126,7 +2140,7 @@
                 </div>
             `;
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p>`;
         }
     }
 
@@ -2181,7 +2195,7 @@
                 </div>
             `;
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(e.message)}</p>`;
+            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p>`;
         }
     }
 
@@ -2195,7 +2209,7 @@
         try {
             await saveSettings(patch);
             showToast('Website settings saved!', 'success');
-        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
     }
 
     // ==================== INIT ====================
