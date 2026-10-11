@@ -1099,120 +1099,153 @@
 
     // ==================== HOME ====================
     function renderHome(container) {
-        container.innerHTML = `
-            <section class="hero">
-                <div class="container hero-content">
-                    <h1>${esc(siteSettings.hero_title || '').replace(/\n/g, '<br>')}</h1>
-                    <p>${esc(siteSettings.hero_subtitle || '')}</p>
-                    <div class="hero-buttons">
-                        <button class="btn btn-gold" onclick="navigate('classes')">${esc(siteSettings.hero_button_1 || '📚 Explore Classes')}</button>
-                        <button class="btn btn-outline" onclick="navigate('exams')">${esc(siteSettings.hero_button_2 || '🎯 Competitive Exams')}</button>
-                    </div>
+    const treeNavItems = [
+        { page: 'classes',         icon: '📖', label: 'Classes 1-10',      cls: 'hanger-1' },
+        { page: 'classes11',       icon: '🎓', label: 'Classes 11-12',     cls: 'hanger-2' },
+        { page: 'exams',           icon: '🎯', label: 'Exams',             cls: 'hanger-3' },
+        { page: 'tests',           icon: '✍️', label: 'Tests',             cls: 'hanger-4' },
+        { page: 'roadmaps',        icon: '🗺️', label: 'Roadmaps',          cls: 'hanger-5' },
+        { page: 'current-affairs', icon: '📰', label: 'Current Affairs',   cls: 'hanger-6' },
+        { page: 'study-materials', icon: '📚', label: 'Materials',         cls: 'hanger-7' },
+        { page: 'news',            icon: '📢', label: 'News',              cls: 'hanger-8' }
+    ];
+
+    const hangersHTML = treeNavItems.map(item => `
+        <div class="hanger ${item.cls}">
+            <div class="hanger-rope"></div>
+            <div class="hanger-card" onclick="navigate('${item.page}')" title="${esc(item.label)}">
+                <div class="hc-icon">${item.icon}</div>
+                <div class="hc-label">${esc(item.label)}</div>
+            </div>
+        </div>
+    `).join('');
+
+    container.innerHTML = `
+        <section class="tree-hero">
+            <div class="tree-hero-inner">
+                <h1>${esc(siteSettings.hero_title || 'Learn Today.\nPrepare for Tomorrow.').replace(/\n/g, '<br>')}</h1>
+                <p class="tree-subtitle">${esc(siteSettings.hero_subtitle || '')}</p>
+                <div class="tree-search">
                     <div class="search-bar">
                         <input type="text" placeholder="Search notes, videos, subjects, exams..." id="heroSearchInput"
                                onkeypress="if(event.key==='Enter'){goToSearchFromHero();}">
                         <button onclick="goToSearchFromHero()">🔍 Search</button>
                     </div>
                 </div>
-            </section>
 
-            <section class="section">
-                <div class="container">
-                    <h2 class="section-title">${esc(siteSettings.quick_access_title || 'Quick Access')}</h2>
-                    <p class="section-subtitle">Jump straight into what you need</p>
-                    <div class="card-grid">
-                        <div class="card" onclick="navigate('classes')">
-                            <div class="card-icon">📖</div>
-                            <h3>Classes 1–10</h3>
-                            <p>Chapter-wise notes, DPPs, videos and more.</p>
-                            <span style="color:var(--gold-600);font-weight:600;">Explore →</span>
-                        </div>
-                        <div class="card" onclick="navigate('classes11')">
-                            <div class="card-icon">🎓</div>
-                            <h3>Classes 11–12</h3>
-                            <p>Science, Commerce and Humanities streams.</p>
-                            <span style="color:var(--gold-600);font-weight:600;">Explore →</span>
-                        </div>
-                        <div class="card" onclick="navigate('exams')">
-                            <div class="card-icon">🎯</div>
-                            <h3>Competitive Exams</h3>
-                            <p>JEE, NEET, UPSC, CUET, NDA, SSC and more.</p>
-                            <span style="color:var(--gold-600);font-weight:600;">Explore →</span>
-                        </div>
-                        <div class="card" onclick="navigate('tests')">
-                            <div class="card-icon">✍️</div>
-                            <h3>Tests & Quizzes</h3>
-                            <p>Practice tests with instant results and explanations.</p>
-                            <span style="color:var(--gold-600);font-weight:600;">Start →</span>
-                        </div>
-                        <div class="card" onclick="navigate('roadmaps')">
-                            <div class="card-icon">🗺️</div>
-                            <h3>Roadmaps</h3>
-                            <p>Structured study plans for your target exam.</p>
-                            <span style="color:var(--gold-600);font-weight:600;">View →</span>
-                        </div>
-                        <div class="card" onclick="navigate('current-affairs')">
-                            <div class="card-icon">📰</div>
-                            <h3>Current Affairs</h3>
-                            <p>Daily, weekly and monthly updates.</p>
-                            <span style="color:var(--gold-600);font-weight:600;">Read →</span>
-                        </div>
-                    </div>
+                <div class="tree-scene">
+                    <svg class="tree-svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="trunkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stop-color="#3d2b1f"/>
+                                <stop offset="50%" stop-color="#5c4033"/>
+                                <stop offset="100%" stop-color="#2e1f14"/>
+                            </linearGradient>
+                            <linearGradient id="branchGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#5c4033"/>
+                                <stop offset="100%" stop-color="#3d2b1f"/>
+                            </linearGradient>
+                            <radialGradient id="leafGrad" cx="50%" cy="30%" r="70%">
+                                <stop offset="0%" stop-color="#2f5d3a"/>
+                                <stop offset="100%" stop-color="#1a3a22"/>
+                            </radialGradient>
+                        </defs>
+                        <path d="M 400 480 Q 360 490 320 495 Q 340 485 380 475 Z" fill="#2e1f14" opacity="0.9"/>
+                        <path d="M 400 480 Q 440 490 480 495 Q 460 485 420 475 Z" fill="#2e1f14" opacity="0.9"/>
+                        <path d="M 400 480 Q 380 495 360 500 Q 380 490 395 480 Z" fill="#1f140d" opacity="0.9"/>
+                        <path d="M 400 480 Q 420 495 440 500 Q 420 490 405 480 Z" fill="#1f140d" opacity="0.9"/>
+                        <path d="M 370 480 Q 365 380 372 300 Q 378 240 385 180 Q 390 140 395 100
+                                 L 405 100 Q 410 140 415 180 Q 422 240 428 300 Q 435 380 430 480 Z"
+                              fill="url(#trunkGrad)"/>
+                        <path d="M 385 470 Q 383 380 388 300" stroke="#2e1f14" stroke-width="1.5" fill="none" opacity="0.6"/>
+                        <path d="M 415 470 Q 417 380 412 300" stroke="#2e1f14" stroke-width="1.5" fill="none" opacity="0.6"/>
+                        <path d="M 390 200 Q 340 170 280 150 Q 240 140 200 130"
+                              stroke="url(#branchGrad)" stroke-width="14" fill="none" stroke-linecap="round"/>
+                        <path d="M 410 200 Q 460 170 520 150 Q 560 140 600 130"
+                              stroke="url(#branchGrad)" stroke-width="14" fill="none" stroke-linecap="round"/>
+                        <path d="M 395 160 Q 360 120 320 95 Q 290 80 260 70"
+                              stroke="url(#branchGrad)" stroke-width="11" fill="none" stroke-linecap="round"/>
+                        <path d="M 405 160 Q 440 120 480 95 Q 510 80 540 70"
+                              stroke="url(#branchGrad)" stroke-width="11" fill="none" stroke-linecap="round"/>
+                        <path d="M 400 120 Q 400 80 400 50"
+                              stroke="url(#branchGrad)" stroke-width="9" fill="none" stroke-linecap="round"/>
+                        <path d="M 280 150 Q 260 130 240 115" stroke="#3d2b1f" stroke-width="5" fill="none" stroke-linecap="round"/>
+                        <path d="M 520 150 Q 540 130 560 115" stroke="#3d2b1f" stroke-width="5" fill="none" stroke-linecap="round"/>
+                        <path d="M 320 95 Q 300 75 285 60" stroke="#3d2b1f" stroke-width="4" fill="none" stroke-linecap="round"/>
+                        <path d="M 480 95 Q 500 75 515 60" stroke="#3d2b1f" stroke-width="4" fill="none" stroke-linecap="round"/>
+                        <g opacity="0.95">
+                            <ellipse cx="200" cy="120" rx="55" ry="45" fill="url(#leafGrad)"/>
+                            <ellipse cx="260" cy="70"  rx="60" ry="50" fill="url(#leafGrad)"/>
+                            <ellipse cx="320" cy="55"  rx="65" ry="52" fill="url(#leafGrad)"/>
+                            <ellipse cx="400" cy="40"  rx="75" ry="58" fill="url(#leafGrad)"/>
+                            <ellipse cx="480" cy="55"  rx="65" ry="52" fill="url(#leafGrad)"/>
+                            <ellipse cx="540" cy="70"  rx="60" ry="50" fill="url(#leafGrad)"/>
+                            <ellipse cx="600" cy="120" rx="55" ry="45" fill="url(#leafGrad)"/>
+                            <ellipse cx="230" cy="95"  rx="40" ry="32" fill="#244a2e" opacity="0.6"/>
+                            <ellipse cx="370" cy="30"  rx="45" ry="35" fill="#244a2e" opacity="0.5"/>
+                            <ellipse cx="520" cy="90"  rx="40" ry="32" fill="#244a2e" opacity="0.6"/>
+                        </g>
+                        <ellipse cx="330" cy="65" rx="18" ry="14" fill="#fbbf24" opacity="0.15"/>
+                        <ellipse cx="460" cy="80" rx="20" ry="15" fill="#fbbf24" opacity="0.12"/>
+                        <ellipse cx="400" cy="100" rx="15" ry="12" fill="#fbbf24" opacity="0.1"/>
+                    </svg>
+
+                    <div class="tree-ground"></div>
+                    <div class="tree-hangers">${hangersHTML}</div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            ${additionalResources.length ? `
-            <section class="section section-alt">
-                <div class="container">
-                    <h2 class="section-title">${esc(siteSettings.materials_title || 'Latest Additional Materials')}</h2>
-                    <p class="section-subtitle">Hand-picked resources to get you started</p>
-                    <div class="card-grid">
-                        ${additionalResources.slice(0, 6).map(r => resourceCard(r)).join('')}
-                    </div>
-                    <div style="text-align:center;margin-top:2rem;">
-                        <button class="btn btn-navy" onclick="navigate('study-materials')">View All Additional Materials →</button>
-                    </div>
+        ${additionalResources.length ? `
+        <section class="section section-alt">
+            <div class="container">
+                <h2 class="section-title">${esc(siteSettings.materials_title || 'Latest Additional Materials')}</h2>
+                <p class="section-subtitle">Hand-picked resources to get you started</p>
+                <div class="card-grid">
+                    ${additionalResources.slice(0, 6).map(r => resourceCard(r)).join('')}
                 </div>
-            </section>` : ''}
-
-            ${roadmaps.length ? `
-            <section class="section">
-                <div class="container">
-                    <h2 class="section-title">${esc(siteSettings.roadmaps_title || 'Popular Roadmaps')}</h2>
-                    <p class="section-subtitle">Step-by-step plans trusted by toppers</p>
-                    <div class="card-grid">
-                        ${roadmaps.slice(0, 3).map(r => roadmapCard(r)).join('')}
-                    </div>
+                <div style="text-align:center;margin-top:2rem;">
+                    <button class="btn btn-navy" onclick="navigate('study-materials')">View All Additional Materials →</button>
                 </div>
-            </section>` : ''}
+            </div>
+        </section>` : ''}
 
-            ${newsItems.length ? `
-            <section class="section section-alt">
-                <div class="container">
-                    <h2 class="section-title">${esc(siteSettings.news_title || 'Education News')}</h2>
-                    <p class="section-subtitle">Latest updates from the education world</p>
-                    <div class="card-grid">
-                        ${newsItems.slice(0, 3).map(n => newsCard(n)).join('')}
-                    </div>
-                    <div style="text-align:center;margin-top:2rem;">
-                        <button class="btn btn-navy" onclick="navigate('news')">Read All News →</button>
-                    </div>
+        ${roadmaps.length ? `
+        <section class="section">
+            <div class="container">
+                <h2 class="section-title">${esc(siteSettings.roadmaps_title || 'Popular Roadmaps')}</h2>
+                <p class="section-subtitle">Step-by-step plans trusted by toppers</p>
+                <div class="card-grid">
+                    ${roadmaps.slice(0, 3).map(r => roadmapCard(r)).join('')}
                 </div>
-            </section>` : ''}
+            </div>
+        </section>` : ''}
 
-            <section class="section">
-                <div class="container">
-                    <div class="card" style="background:linear-gradient(135deg,#102a43,#243b53);color:white;text-align:center;padding:3rem 1.5rem;cursor:default;">
-                        <h2 style="font-size:2rem;margin-bottom:0.75rem;color:white;">Ready to start learning?</h2>
-                        <p style="color:var(--navy-200);margin-bottom:1.5rem;">Join thousands of students preparing smarter with PADHAKU.</p>
-                        <button class="btn btn-gold" onclick="openLogin()">Student Login</button>
-                    </div>
+        ${newsItems.length ? `
+        <section class="section section-alt">
+            <div class="container">
+                <h2 class="section-title">${esc(siteSettings.news_title || 'Education News')}</h2>
+                <p class="section-subtitle">Latest updates from the education world</p>
+                <div class="card-grid">
+                    ${newsItems.slice(0, 3).map(n => newsCard(n)).join('')}
                 </div>
-            </section>
-        `;
-    }
+                <div style="text-align:center;margin-top:2rem;">
+                    <button class="btn btn-navy" onclick="navigate('news')">Read All News →</button>
+                </div>
+            </div>
+        </section>` : ''}
 
-    function goToSearchFromHero() {
+        <section class="section">
+            <div class="container">
+                <div class="card" style="background:linear-gradient(135deg,#102a43,#243b53);color:white;text-align:center;padding:3rem 1.5rem;cursor:default;">
+                    <h2 style="font-size:2rem;margin-bottom:0.75rem;color:white;">Ready to start learning?</h2>
+                    <p style="color:var(--navy-200);margin-bottom:1.5rem;">Join thousands of students preparing smarter with PADHAKU.</p>
+                    <button class="btn btn-gold" onclick="openLogin()">Student Login</button>
+                </div>
+            </div>
+        </section>
+    `;
+}
         const q = document.getElementById('heroSearchInput')?.value || '';
         navigate('search');
         setTimeout(() => {
