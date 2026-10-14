@@ -162,6 +162,7 @@
     max-width: 1100px;
     margin: 0 auto;
     height: 520px;
+    overflow: visible;
 }
 .tree-svg {
     position: absolute;
@@ -174,18 +175,20 @@
     filter: drop-shadow(0 20px 40px rgba(0,0,0,0.35));
     pointer-events: none;
 }
-        .tree-img {
+      .tree-img {
     position: absolute;
-    left: 50%;
-    bottom: 0;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 780px;
+    right: -5%;
+    bottom: -20px;
+    left: auto;
+    transform: none;
+    width: 55%;
+    max-width: 500px;
     height: auto;
-    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.35));
+    filter: drop-shadow(-20px 20px 40px rgba(0,0,0,0.5));
     pointer-events: none;
     mix-blend-mode: multiply;
     -webkit-mix-blend-mode: multiply;
+    z-index: 2;
 }
 .tree-ground {
     position: absolute;
@@ -200,6 +203,7 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
+    z-index: 3;
 }
 .hanger {
     position: absolute;
