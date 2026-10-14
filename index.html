@@ -106,8 +106,7 @@
         ::-webkit-scrollbar-thumb { background: var(--navy-300); border-radius: 4px; }
         @media (max-width: 640px) { .about-owner-grid { grid-template-columns: 1fr !important; } }
         @media (max-width: 768px) { .about-leaders-grid { grid-template-columns: 1fr !important; } .team-detail-grid { grid-template-columns: 1fr !important; } }
-        /* ============ PADHAKU TREE HERO ============ */
-/* ============ PADHAKU HOME HERO ============ */
+      /* ============ PADHAKU HOME HERO ============ */
 .home-hero {
     position: relative;
     background: linear-gradient(135deg, #0a1929 0%, #102a43 40%, #1e4976 70%, #243b53 100%);
@@ -149,7 +148,6 @@
     font-weight: 700;
     letter-spacing: 1.5px;
     margin-bottom: 1.5rem;
-    animation: heroFadeIn 1s ease-out 0.2s backwards;
 }
 .hero-heading {
     font-size: 3.5rem;
@@ -157,11 +155,7 @@
     line-height: 1.1;
     letter-spacing: -2px;
     margin-bottom: 1.25rem;
-    background: linear-gradient(180deg, #ffffff 0%, #d9e2ec 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: heroFadeIn 1s ease-out 0.4s backwards;
+    color: #ffffff;
 }
 .hero-subheading {
     font-size: 1.15rem;
@@ -169,30 +163,24 @@
     max-width: 640px;
     margin: 0 auto 2.5rem;
     line-height: 1.6;
-    animation: heroFadeIn 1s ease-out 0.6s backwards;
 }
 .hero-search-wrap {
     max-width: 580px;
     margin: 0 auto 3rem;
-    animation: heroFadeIn 1s ease-out 0.8s backwards;
 }
 .hero-stats {
     display: flex;
     justify-content: center;
     gap: 3rem;
     flex-wrap: wrap;
-    animation: heroFadeIn 1s ease-out 1s backwards;
 }
-.hero-stats .stat {
-    text-align: center;
-}
+.hero-stats .stat { text-align: center; }
 .hero-stats .stat-num {
     font-size: 2rem;
     font-weight: 900;
     color: #fbbf24;
     line-height: 1;
     margin-bottom: 0.35rem;
-    text-shadow: 0 2px 20px rgba(245,158,11,0.4);
 }
 .hero-stats .stat-label {
     font-size: 0.85rem;
@@ -267,9 +255,7 @@
     border-color: var(--gold-500);
     box-shadow: 0 12px 30px rgba(245,158,11,0.15), 0 4px 12px rgba(0,0,0,0.08);
 }
-.nav-tile:hover::before {
-    transform: scaleY(1);
-}
+.nav-tile:hover::before { transform: scaleY(1); }
 .nav-tile-icon {
     font-size: 2rem;
     line-height: 1;
@@ -283,13 +269,8 @@
     border-radius: 12px;
     transition: transform 0.3s ease;
 }
-.nav-tile:hover .nav-tile-icon {
-    transform: scale(1.1) rotate(-5deg);
-}
-.nav-tile-content {
-    flex: 1;
-    min-width: 0;
-}
+.nav-tile:hover .nav-tile-icon { transform: scale(1.1) rotate(-5deg); }
+.nav-tile-content { flex: 1; min-width: 0; }
 .nav-tile-label {
     font-size: 0.95rem;
     font-weight: 700;
@@ -310,10 +291,7 @@
     transition: all 0.3s ease;
     flex-shrink: 0;
 }
-.nav-tile:hover .nav-tile-arrow {
-    opacity: 1;
-    transform: translateX(0);
-}
+.nav-tile:hover .nav-tile-arrow { opacity: 1; transform: translateX(0); }
 
 /* ============ CTA CARD ============ */
 .cta-card {
@@ -325,29 +303,14 @@
     position: relative;
     overflow: hidden;
 }
-.cta-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 30% 30%, rgba(245,158,11,0.15) 0%, transparent 60%);
-    pointer-events: none;
-}
 .cta-card h2 {
     font-size: 2rem;
     margin-bottom: 0.75rem;
     color: white;
-    position: relative;
-    z-index: 1;
 }
 .cta-card p {
     color: var(--navy-200);
     margin-bottom: 1.5rem;
-    position: relative;
-    z-index: 1;
-}
-.cta-card .btn {
-    position: relative;
-    z-index: 1;
 }
 
 /* ============ RESPONSIVE ============ */
@@ -369,15 +332,11 @@
     .nav-grid { grid-template-columns: 1fr; gap: 0.85rem; }
     .nav-tile { padding: 1rem; }
     .nav-tile-icon { width: 44px; height: 44px; font-size: 1.6rem; }
-    .nav-tile-label { font-size: 0.9rem; }
-    .nav-tile-desc { font-size: 0.7rem; }
     .cta-card { padding: 2.5rem 1.25rem; border-radius: 18px; }
     .cta-card h2 { font-size: 1.5rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-    .home-hero-inner, .hero-badge, .hero-heading, .hero-subheading, .hero-search-wrap, .hero-stats {
-        animation: none !important;
-    }
+    .home-hero-inner { animation: none !important; }
     .nav-tile, .nav-tile-icon, .nav-tile-arrow { transition: none !important; }
 }
 </style>
@@ -1182,35 +1141,39 @@
 
     // ==================== HOME ====================
    function renderHome(container) {
-    const treeNavItems = [
-        { page: 'classes',         icon: '📖', label: 'Classes 1-10',      cls: 'hanger-1' },
-        { page: 'classes11',       icon: '🎓', label: 'Classes 11-12',     cls: 'hanger-2' },
-        { page: 'exams',           icon: '🎯', label: 'Exams',             cls: 'hanger-3' },
-        { page: 'tests',           icon: '✍️', label: 'Tests',             cls: 'hanger-4' },
-        { page: 'roadmaps',        icon: '🗺️', label: 'Roadmaps',          cls: 'hanger-5' },
-        { page: 'current-affairs', icon: '📰', label: 'Current Affairs',   cls: 'hanger-6' },
-        { page: 'study-materials', icon: '📚', label: 'Materials',         cls: 'hanger-7' },
-        { page: 'news',            icon: '📢', label: 'News',              cls: 'hanger-8' }
+    const navItems = [
+        { page: 'classes',         icon: '📖', label: 'Classes 1-10',      desc: 'Chapter-wise notes & videos' },
+        { page: 'classes11',       icon: '🎓', label: 'Classes 11-12',     desc: 'Science, Commerce, Arts' },
+        { page: 'exams',           icon: '🎯', label: 'Competitive Exams', desc: 'JEE, NEET, UPSC & more' },
+        { page: 'tests',           icon: '✍️', label: 'Tests & Quizzes',   desc: 'Practice with instant results' },
+        { page: 'roadmaps',        icon: '🗺️', label: 'Roadmaps',          desc: 'Structured study plans' },
+        { page: 'current-affairs', icon: '📰', label: 'Current Affairs',   desc: 'Daily, weekly, monthly' },
+        { page: 'study-materials', icon: '📚', label: 'Additional Materials', desc: 'PDFs, notes & resources' },
+        { page: 'news',            icon: '📢', label: 'Education News',    desc: 'Latest updates' }
     ];
 
-    const hangersHTML = treeNavItems.map(item => `
-        <div class="hanger ${item.cls}">
-            <div class="hanger-rope"></div>
-            <div class="hanger-card" onclick="navigate('${item.page}')" title="${esc(item.label)}">
-                <div class="hc-icon">${item.icon}</div>
-                <div class="hc-label">${esc(item.label)}</div>
+    const navCards = navItems.map(item => `
+        <div class="nav-tile" onclick="navigate('${item.page}')" title="${esc(item.label)}">
+            <div class="nav-tile-icon">${item.icon}</div>
+            <div class="nav-tile-content">
+                <div class="nav-tile-label">${esc(item.label)}</div>
+                <div class="nav-tile-desc">${esc(item.desc)}</div>
             </div>
+            <div class="nav-tile-arrow">→</div>
         </div>
     `).join('');
 
-    const TREE_IMG = 'https://ozrvpbziwpkfkejafjnm.supabase.co/storage/v1/object/public/site-media/large-green-tree-with-robust-trunk-lush-foliage%20(1)%20(1).png';
-
     container.innerHTML = `
-        <section class="tree-hero">
-            <div class="tree-hero-inner">
-                <h1>${esc(siteSettings.hero_title || 'Learn Today.\nPrepare for Tomorrow.').replace(/\n/g, '<br>')}</h1>
-                <p class="tree-subtitle">${esc(siteSettings.hero_subtitle || '')}</p>
-                <div class="tree-search">
+        <section class="home-hero">
+            <div class="home-hero-bg"></div>
+            <div class="home-hero-inner">
+                <div class="hero-badge">⚡ PREMIUM EDUCATION PLATFORM</div>
+                <h1 class="hero-heading">
+                    ${esc(siteSettings.hero_title || 'Learn Today.\nPrepare for Tomorrow.').replace(/\n/g, '<br>')}
+                </h1>
+                <p class="hero-subheading">${esc(siteSettings.hero_subtitle || 'Study materials, video lectures, notes, practice questions, current affairs and preparation roadmaps—all in one place.')}</p>
+
+                <div class="hero-search-wrap">
                     <div class="search-bar">
                         <input type="text" placeholder="Search notes, videos, subjects, exams..." id="heroSearchInput"
                                onkeypress="if(event.key==='Enter'){goToSearchFromHero();}">
@@ -1218,11 +1181,26 @@
                     </div>
                 </div>
 
-                <div class="tree-scene">
-                    <img class="tree-img" src="${TREE_IMG}" alt="Padhaku knowledge tree" />
-                    <div class="tree-ground"></div>
-                    <div class="tree-hangers">${hangersHTML}</div>
+                <div class="hero-stats">
+                    <div class="stat"><div class="stat-num">10K+</div><div class="stat-label">Students</div></div>
+                    <div class="stat"><div class="stat-num">500+</div><div class="stat-label">Materials</div></div>
+                    <div class="stat"><div class="stat-num">50+</div><div class="stat-label">Exams</div></div>
+                    <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Free</div></div>
                 </div>
+            </div>
+
+            <div class="hero-wave">
+                <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0,60 C240,120 480,0 720,60 C960,120 1200,0 1440,60 L1440,120 L0,120 Z" fill="#f9fafb"/>
+                </svg>
+            </div>
+        </section>
+
+        <section class="nav-section">
+            <div class="container">
+                <h2 class="nav-section-title">Explore Padhaku</h2>
+                <p class="nav-section-subtitle">Everything you need to prepare smarter</p>
+                <div class="nav-grid">${navCards}</div>
             </div>
         </section>
 
@@ -1231,9 +1209,7 @@
             <div class="container">
                 <h2 class="section-title">${esc(siteSettings.materials_title || 'Latest Additional Materials')}</h2>
                 <p class="section-subtitle">Hand-picked resources to get you started</p>
-                <div class="card-grid">
-                    ${additionalResources.slice(0, 6).map(r => resourceCard(r)).join('')}
-                </div>
+                <div class="card-grid">${additionalResources.slice(0, 6).map(r => resourceCard(r)).join('')}</div>
                 <div style="text-align:center;margin-top:2rem;">
                     <button class="btn btn-navy" onclick="navigate('study-materials')">View All Additional Materials →</button>
                 </div>
@@ -1245,9 +1221,7 @@
             <div class="container">
                 <h2 class="section-title">${esc(siteSettings.roadmaps_title || 'Popular Roadmaps')}</h2>
                 <p class="section-subtitle">Step-by-step plans trusted by toppers</p>
-                <div class="card-grid">
-                    ${roadmaps.slice(0, 3).map(r => roadmapCard(r)).join('')}
-                </div>
+                <div class="card-grid">${roadmaps.slice(0, 3).map(r => roadmapCard(r)).join('')}</div>
             </div>
         </section>` : ''}
 
@@ -1256,9 +1230,7 @@
             <div class="container">
                 <h2 class="section-title">${esc(siteSettings.news_title || 'Education News')}</h2>
                 <p class="section-subtitle">Latest updates from the education world</p>
-                <div class="card-grid">
-                    ${newsItems.slice(0, 3).map(n => newsCard(n)).join('')}
-                </div>
+                <div class="card-grid">${newsItems.slice(0, 3).map(n => newsCard(n)).join('')}</div>
                 <div style="text-align:center;margin-top:2rem;">
                     <button class="btn btn-navy" onclick="navigate('news')">Read All News →</button>
                 </div>
@@ -1267,9 +1239,9 @@
 
         <section class="section">
             <div class="container">
-                <div class="card" style="background:linear-gradient(135deg,#102a43,#243b53);color:white;text-align:center;padding:3rem 1.5rem;cursor:default;">
-                    <h2 style="font-size:2rem;margin-bottom:0.75rem;color:white;">Ready to start learning?</h2>
-                    <p style="color:var(--navy-200);margin-bottom:1.5rem;">Join thousands of students preparing smarter with PADHAKU.</p>
+                <div class="cta-card">
+                    <h2>Ready to start learning?</h2>
+                    <p>Join thousands of students preparing smarter with PADHAKU.</p>
                     <button class="btn btn-gold" onclick="openLogin()">Student Login</button>
                 </div>
             </div>
