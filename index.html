@@ -1142,76 +1142,135 @@
     // ==================== HOME ====================
    function renderHome(container) {
     const navItems = [
-        { page: 'classes',         icon: '📖', label: 'Classes 1-10',      desc: 'Chapter-wise notes & videos' },
-        { page: 'classes11',       icon: '🎓', label: 'Classes 11-12',     desc: 'Science, Commerce, Arts' },
-        { page: 'exams',           icon: '🎯', label: 'Competitive Exams', desc: 'JEE, NEET, UPSC & more' },
-        { page: 'tests',           icon: '✍️', label: 'Tests & Quizzes',   desc: 'Practice with instant results' },
-        { page: 'roadmaps',        icon: '🗺️', label: 'Roadmaps',          desc: 'Structured study plans' },
-        { page: 'current-affairs', icon: '📰', label: 'Current Affairs',   desc: 'Daily, weekly, monthly' },
-        { page: 'study-materials', icon: '📚', label: 'Additional Materials', desc: 'PDFs, notes & resources' },
-        { page: 'news',            icon: '📢', label: 'Education News',    desc: 'Latest updates' }
+        { page: 'classes',         icon: '📖', label: 'Classes 1-10',      desc: 'Chapter-wise notes & videos', color: '#1a73e8' },
+        { page: 'classes11',       icon: '🎓', label: 'Classes 11-12',     desc: 'Science, Commerce, Arts', color: '#7c3aed' },
+        { page: 'exams',           icon: '🎯', label: 'Competitive Exams', desc: 'JEE, NEET, UPSC & more', color: '#ef4444' },
+        { page: 'tests',           icon: '✍️', label: 'Tests & Quizzes',   desc: 'Practice with instant results', color: '#10b981' },
+        { page: 'roadmaps',        icon: '🗺️', label: 'Roadmaps',          desc: 'Structured study plans', color: '#f59e0b' },
+        { page: 'current-affairs', icon: '📰', label: 'Current Affairs',   desc: 'Daily, weekly, monthly', color: '#06b6d4' },
+        { page: 'study-materials', icon: '📚', label: 'Additional Materials', desc: 'PDFs, notes & resources', color: '#6366f1' },
+        { page: 'news',            icon: '📢', label: 'Education News',    desc: 'Latest updates', color: '#ec4899' }
     ];
 
     const navCards = navItems.map(item => `
-        <div class="nav-tile" onclick="navigate('${item.page}')" title="${esc(item.label)}">
-            <div class="nav-tile-icon">${item.icon}</div>
-            <div class="nav-tile-content">
-                <div class="nav-tile-label">${esc(item.label)}</div>
-                <div class="nav-tile-desc">${esc(item.desc)}</div>
+        <div class="pw-tile" onclick="navigate('${item.page}')" title="${esc(item.label)}">
+            <div class="pw-tile-icon" style="background: ${item.color}15; color: ${item.color};">${item.icon}</div>
+            <div class="pw-tile-content">
+                <div class="pw-tile-label">${esc(item.label)}</div>
+                <div class="pw-tile-desc">${esc(item.desc)}</div>
             </div>
-            <div class="nav-tile-arrow">→</div>
+            <div class="pw-tile-arrow" style="color: ${item.color};">→</div>
         </div>
     `).join('');
 
     container.innerHTML = `
-        <section class="home-hero">
-            <div class="home-hero-bg"></div>
-            <div class="home-hero-inner">
-                <div class="hero-badge">⚡ PREMIUM EDUCATION PLATFORM</div>
-                <h1 class="hero-heading">
-                    ${esc(siteSettings.hero_title || 'Learn Today.\nPrepare for Tomorrow.').replace(/\n/g, '<br>')}
-                </h1>
-                <p class="hero-subheading">${esc(siteSettings.hero_subtitle || 'Study materials, video lectures, notes, practice questions, current affairs and preparation roadmaps—all in one place.')}</p>
+        <section class="pw-hero">
+            <div class="pw-hero-bg"></div>
+            <div class="pw-hero-inner">
+                <div class="pw-hero-left">
+                    <div class="pw-badge">🏆 India's Premium Learning Platform</div>
+                    <h1 class="pw-heading">
+                        <span class="pw-heading-black">Learn Today.</span><br>
+                        <span class="pw-heading-blue">Prepare for Tomorrow.</span>
+                    </h1>
+                    <p class="pw-subheading">Study materials, video lectures, notes, practice questions, current affairs and preparation roadmaps — all in one place.</p>
 
-                <div class="hero-search-wrap">
-                    <div class="search-bar">
-                        <input type="text" placeholder="Search notes, videos, subjects, exams..." id="heroSearchInput"
-                               onkeypress="if(event.key==='Enter'){goToSearchFromHero();}">
-                        <button onclick="goToSearchFromHero()">🔍 Search</button>
+                    <div class="pw-features">
+                        <div class="pw-feature"><span class="pw-check">✓</span> Free Study Materials</div>
+                        <div class="pw-feature"><span class="pw-check">✓</span> Expert-curated Content</div>
+                        <div class="pw-feature"><span class="pw-check">✓</span> Chapter-wise Tests</div>
+                        <div class="pw-feature"><span class="pw-check">✓</span> Preparation Roadmaps</div>
+                    </div>
+
+                    <div class="pw-cta-group">
+                        <button class="pw-btn-primary" onclick="openLogin()">Get Started →</button>
+                        <button class="pw-btn-secondary" onclick="navigate('classes')">Explore Courses</button>
+                    </div>
+
+                    <div class="pw-search-wrap">
+                        <div class="search-bar">
+                            <input type="text" placeholder="Search notes, videos, subjects, exams..." id="heroSearchInput"
+                                   onkeypress="if(event.key==='Enter'){goToSearchFromHero();}">
+                            <button onclick="goToSearchFromHero()">🔍 Search</button>
+                        </div>
                     </div>
                 </div>
 
-                <div class="hero-stats">
-                    <div class="stat"><div class="stat-num">10K+</div><div class="stat-label">Students</div></div>
-                    <div class="stat"><div class="stat-num">500+</div><div class="stat-label">Materials</div></div>
-                    <div class="stat"><div class="stat-num">50+</div><div class="stat-label">Exams</div></div>
-                    <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Free</div></div>
+                <div class="pw-hero-right">
+                    <div class="pw-hero-illustration">
+                        <div class="pw-float-card pw-float-1">
+                            <div class="pw-float-icon">📚</div>
+                            <div class="pw-float-text">
+                                <div class="pw-float-title">500+ Materials</div>
+                                <div class="pw-float-sub">Notes & Videos</div>
+                            </div>
+                        </div>
+                        <div class="pw-float-card pw-float-2">
+                            <div class="pw-float-icon">🎯</div>
+                            <div class="pw-float-text">
+                                <div class="pw-float-title">50+ Exams</div>
+                                <div class="pw-float-sub">JEE, NEET, UPSC</div>
+                            </div>
+                        </div>
+                        <div class="pw-float-card pw-float-3">
+                            <div class="pw-float-icon">✅</div>
+                            <div class="pw-float-text">
+                                <div class="pw-float-title">100% Free</div>
+                                <div class="pw-float-sub">No hidden charges</div>
+                            </div>
+                        </div>
+                        <div class="pw-hero-circle"></div>
+                        <div class="pw-hero-circle-inner">📖</div>
+                    </div>
                 </div>
-            </div>
-
-            <div class="hero-wave">
-                <svg viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0,60 C240,120 480,0 720,60 C960,120 1200,0 1440,60 L1440,120 L0,120 Z" fill="#f9fafb"/>
-                </svg>
             </div>
         </section>
 
-        <section class="nav-section">
+        <section class="pw-stats-section">
             <div class="container">
-                <h2 class="nav-section-title">Explore Padhaku</h2>
-                <p class="nav-section-subtitle">Everything you need to prepare smarter</p>
-                <div class="nav-grid">${navCards}</div>
+                <div class="pw-stats">
+                    <div class="pw-stat">
+                        <div class="pw-stat-num">10K+</div>
+                        <div class="pw-stat-label">Active Students</div>
+                    </div>
+                    <div class="pw-stat">
+                        <div class="pw-stat-num">500+</div>
+                        <div class="pw-stat-label">Study Materials</div>
+                    </div>
+                    <div class="pw-stat">
+                        <div class="pw-stat-num">50+</div>
+                        <div class="pw-stat-label">Exams Covered</div>
+                    </div>
+                    <div class="pw-stat">
+                        <div class="pw-stat-num">100%</div>
+                        <div class="pw-stat-label">Free Forever</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="pw-nav-section">
+            <div class="container">
+                <div class="pw-section-header">
+                    <h2 class="pw-section-title">Explore <span class="pw-highlight">Padhaku</span></h2>
+                    <p class="pw-section-subtitle">Everything you need to prepare smarter</p>
+                </div>
+                <div class="pw-grid">
+                    ${navCards}
+                </div>
             </div>
         </section>
 
         ${additionalResources.length ? `
         <section class="section section-alt">
             <div class="container">
-                <h2 class="section-title">${esc(siteSettings.materials_title || 'Latest Additional Materials')}</h2>
-                <p class="section-subtitle">Hand-picked resources to get you started</p>
+                <div class="pw-section-header">
+                    <h2 class="pw-section-title">Latest <span class="pw-highlight">Materials</span></h2>
+                    <p class="pw-section-subtitle">Hand-picked resources to get you started</p>
+                </div>
                 <div class="card-grid">${additionalResources.slice(0, 6).map(r => resourceCard(r)).join('')}</div>
                 <div style="text-align:center;margin-top:2rem;">
-                    <button class="btn btn-navy" onclick="navigate('study-materials')">View All Additional Materials →</button>
+                    <button class="pw-btn-secondary" onclick="navigate('study-materials')" style="background: var(--navy-800); color: white; padding: 12px 28px; border-radius: 999px; font-weight: 600;">View All Materials →</button>
                 </div>
             </div>
         </section>` : ''}
@@ -1219,8 +1278,10 @@
         ${roadmaps.length ? `
         <section class="section">
             <div class="container">
-                <h2 class="section-title">${esc(siteSettings.roadmaps_title || 'Popular Roadmaps')}</h2>
-                <p class="section-subtitle">Step-by-step plans trusted by toppers</p>
+                <div class="pw-section-header">
+                    <h2 class="pw-section-title">Popular <span class="pw-highlight">Roadmaps</span></h2>
+                    <p class="pw-section-subtitle">Step-by-step plans trusted by toppers</p>
+                </div>
                 <div class="card-grid">${roadmaps.slice(0, 3).map(r => roadmapCard(r)).join('')}</div>
             </div>
         </section>` : ''}
@@ -1228,21 +1289,23 @@
         ${newsItems.length ? `
         <section class="section section-alt">
             <div class="container">
-                <h2 class="section-title">${esc(siteSettings.news_title || 'Education News')}</h2>
-                <p class="section-subtitle">Latest updates from the education world</p>
+                <div class="pw-section-header">
+                    <h2 class="pw-section-title">Education <span class="pw-highlight">News</span></h2>
+                    <p class="pw-section-subtitle">Latest updates from the education world</p>
+                </div>
                 <div class="card-grid">${newsItems.slice(0, 3).map(n => newsCard(n)).join('')}</div>
                 <div style="text-align:center;margin-top:2rem;">
-                    <button class="btn btn-navy" onclick="navigate('news')">Read All News →</button>
+                    <button class="pw-btn-secondary" onclick="navigate('news')" style="background: var(--navy-800); color: white; padding: 12px 28px; border-radius: 999px; font-weight: 600;">Read All News →</button>
                 </div>
             </div>
         </section>` : ''}
 
         <section class="section">
             <div class="container">
-                <div class="cta-card">
+                <div class="pw-cta-card">
                     <h2>Ready to start learning?</h2>
                     <p>Join thousands of students preparing smarter with PADHAKU.</p>
-                    <button class="btn btn-gold" onclick="openLogin()">Student Login</button>
+                    <button class="pw-btn-primary" onclick="openLogin()">Student Login →</button>
                 </div>
             </div>
         </section>
