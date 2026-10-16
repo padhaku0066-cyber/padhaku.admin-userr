@@ -2293,18 +2293,35 @@ const defaultSiteSettings = {
     }
 }
         
-    async function saveAllSettings() {
-        const keys = ['primary_color','secondary_color','accent_color','background_color','text_color','hero_title','hero_subtitle','hero_button_1','hero_button_2','quick_access_title','materials_title','roadmaps_title','news_title','announcement','footer_text'];
-        const patch = {};
-        keys.forEach(k => {
-            const el = document.getElementById('set_' + k);
-            if (el) patch[k] = el.value;
-        });
-        try {
-            await saveSettings(patch);
-            showToast('Website settings saved!', 'success');
-        } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
-    }
+  async function saveAllSettings() {
+    const keys = [
+        'primary_color','secondary_color','accent_color','background_color','text_color',
+        'pw_blue_color','pw_yellow_color','pw_orange_color',
+        'hero_title','hero_subtitle','hero_badge','hero_button_1','hero_button_2',
+        'hero_feature_1','hero_feature_2','hero_feature_3','hero_feature_4',
+        'hero_float_1_icon','hero_float_1_title','hero_float_1_sub',
+        'hero_float_2_icon','hero_float_2_title','hero_float_2_sub',
+        'hero_float_3_icon','hero_float_3_title','hero_float_3_sub',
+        'hero_circle_emoji',
+        'stat_1_num','stat_1_label','stat_2_num','stat_2_label',
+        'stat_3_num','stat_3_label','stat_4_num','stat_4_label',
+        'explore_title','explore_subtitle',
+        'materials_title','materials_subtitle',
+        'roadmaps_title','roadmaps_subtitle',
+        'news_title','news_subtitle',
+        'cta_title','cta_subtitle','cta_button',
+        'announcement','footer_text'
+    ];
+    const patch = {};
+    keys.forEach(k => {
+        const el = document.getElementById('set_' + k);
+        if (el) patch[k] = el.value;
+    });
+    try {
+        await saveSettings(patch);
+        showToast('✅ All settings saved!', 'success');
+    } catch (e) { showToast('Error: ' + friendlyError(e), 'error'); }
+}
 
     // ==================== INIT ====================
     checkSession();
