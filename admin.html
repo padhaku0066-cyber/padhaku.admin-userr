@@ -2188,59 +2188,111 @@ const defaultSiteSettings = {
 
     // ==================== SETTINGS ====================
     async function renderSettings(container) {
-        if (!isOwner()) {
-            container.innerHTML = '<div class="card"><p style="color:var(--red-500);">Owner-only section.</p></div>';
-            return;
-        }
-        container.innerHTML = '<div class="card"><p>Loading settings...</p></div>';
-        try {
-            const s = await getSettings();
-            container.innerHTML = `
-                <div class="card">
-                    <div class="card-header">
-                        <div>
-                            <h2 class="card-title">Website Settings</h2>
-                            <p style="color:var(--gray-500);margin-top:.35rem;">Colors & homepage content — user panel mein reflect honge.</p>
-                        </div>
-                    </div>
-                    <h3 style="margin:1rem 0;">Colors</h3>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;">
-                        ${['primary_color','secondary_color','accent_color','background_color','text_color'].map(k => `
-                            <div class="form-group">
-                                <label>${k.replaceAll('_',' ')}</label>
-                                <input type="color" class="form-input" id="set_${k}" value="${esc(s[k])}" style="height:50px;padding:0.25rem;">
-                            </div>
-                        `).join('')}
-                    </div>
-                    <h3 style="margin:1.5rem 0 1rem;">Homepage Content</h3>
-                    <div class="form-group"><label>Hero Title</label><textarea class="form-input" id="set_hero_title" rows="2">${esc(s.hero_title)}</textarea></div>
-                    <div class="form-group"><label>Hero Subtitle</label><textarea class="form-input" id="set_hero_subtitle" rows="3">${esc(s.hero_subtitle)}</textarea></div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                        <div class="form-group"><label>Hero Button 1</label><input class="form-input" id="set_hero_button_1" value="${esc(s.hero_button_1)}"></div>
-                        <div class="form-group"><label>Hero Button 2</label><input class="form-input" id="set_hero_button_2" value="${esc(s.hero_button_2)}"></div>
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                        <div class="form-group"><label>Quick Access Heading</label><input class="form-input" id="set_quick_access_title" value="${esc(s.quick_access_title)}"></div>
-                        <div class="form-group"><label>Materials Heading</label><input class="form-input" id="set_materials_title" value="${esc(s.materials_title)}"></div>
-                        <div class="form-group"><label>Roadmaps Heading</label><input class="form-input" id="set_roadmaps_title" value="${esc(s.roadmaps_title)}"></div>
-                        <div class="form-group"><label>News Heading</label><input class="form-input" id="set_news_title" value="${esc(s.news_title)}"></div>
-                    </div>
-                    <div class="form-group"><label>Announcement</label><input class="form-input" id="set_announcement" value="${esc(s.announcement || '')}"></div>
-                    <div class="form-group"><label>Footer Text</label><input class="form-input" id="set_footer_text" value="${esc(s.footer_text || '')}"></div>
-                    <button class="btn btn-gold" onclick="saveAllSettings()">💾 Save Website Settings</button>
-                </div>
-                <div class="card" style="margin-top:1rem;">
-                    <div class="card-header"><h2 class="card-title">Admin Account</h2></div>
-                    <div class="form-group"><label>Name</label><input class="form-input" value="${esc(currentProfile?.full_name || '')}" readonly></div>
-                    <div class="form-group"><label>Email</label><input class="form-input" value="${esc(currentUser?.email || '')}" readonly></div>
-                    <div class="form-group"><label>Role</label><input class="form-input" value="${esc(currentProfile?.role || 'admin')}" readonly></div>
-                </div>
-            `;
-        } catch (e) {
-            container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p>`;
-        }
+    if (!isOwner()) {
+        container.innerHTML = '<div class="card"><p style="color:var(--red-500);">Owner-only section.</p></div>';
+        return;
     }
+    container.innerHTML = '<div class="card"><p>Loading settings...</p></div>';
+    try {
+        const s = await getSettings();
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <h2 class="card-title">🎨 Website Settings</h2>
+                        <p style="color:var(--gray-500);margin-top:.35rem;">Homepage ka sab kuch yahan se edit karo</p>
+                    </div>
+                </div>
 
+                <h3 style="margin:1.5rem 0 1rem;">🎨 Colors</h3>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
+                    <div class="form-group"><label>Primary (Navy)</label><input type="color" class="form-input" id="set_primary_color" value="${esc(s.primary_color)}" style="height:50px;padding:0.25rem;"></div>
+                    <div class="form-group"><label>Secondary</label><input type="color" class="form-input" id="set_secondary_color" value="${esc(s.secondary_color)}" style="height:50px;padding:0.25rem;"></div>
+                    <div class="form-group"><label>Accent (Gold)</label><input type="color" class="form-input" id="set_accent_color" value="${esc(s.accent_color)}" style="height:50px;padding:0.25rem;"></div>
+                    <div class="form-group"><label>PW Blue</label><input type="color" class="form-input" id="set_pw_blue_color" value="${esc(s.pw_blue_color || '#1a73e8')}" style="height:50px;padding:0.25rem;"></div>
+                    <div class="form-group"><label>PW Yellow</label><input type="color" class="form-input" id="set_pw_yellow_color" value="${esc(s.pw_yellow_color || '#ffc107')}" style="height:50px;padding:0.25rem;"></div>
+                    <div class="form-group"><label>PW Orange</label><input type="color" class="form-input" id="set_pw_orange_color" value="${esc(s.pw_orange_color || '#ff6f00')}" style="height:50px;padding:0.25rem;"></div>
+                </div>
+
+                <h3 style="margin:2rem 0 1rem;">🌟 Hero Section</h3>
+                <div class="form-group"><label>Badge Text</label><input class="form-input" id="set_hero_badge" value="${esc(s.hero_badge)}"></div>
+                <div class="form-group"><label>Hero Title (use \\n for line break)</label><textarea class="form-input" id="set_hero_title" rows="2">${esc(s.hero_title)}</textarea></div>
+                <div class="form-group"><label>Hero Subtitle</label><textarea class="form-input" id="set_hero_subtitle" rows="3">${esc(s.hero_subtitle)}</textarea></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-group"><label>Button 1 Text</label><input class="form-input" id="set_hero_button_1" value="${esc(s.hero_button_1)}"></div>
+                    <div class="form-group"><label>Button 2 Text</label><input class="form-input" id="set_hero_button_2" value="${esc(s.hero_button_2)}"></div>
+                </div>
+
+                <h4 style="margin:1.5rem 0 0.75rem;">✓ Feature Checkmarks</h4>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-group"><label>Feature 1</label><input class="form-input" id="set_hero_feature_1" value="${esc(s.hero_feature_1)}"></div>
+                    <div class="form-group"><label>Feature 2</label><input class="form-input" id="set_hero_feature_2" value="${esc(s.hero_feature_2)}"></div>
+                    <div class="form-group"><label>Feature 3</label><input class="form-input" id="set_hero_feature_3" value="${esc(s.hero_feature_3)}"></div>
+                    <div class="form-group"><label>Feature 4</label><input class="form-input" id="set_hero_feature_4" value="${esc(s.hero_feature_4)}"></div>
+                </div>
+
+                <h4 style="margin:1.5rem 0 0.75rem;">💳 Floating Cards</h4>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
+                    <div class="form-group"><label>Card 1 Icon</label><input class="form-input" id="set_hero_float_1_icon" value="${esc(s.hero_float_1_icon)}"></div>
+                    <div class="form-group"><label>Card 1 Title</label><input class="form-input" id="set_hero_float_1_title" value="${esc(s.hero_float_1_title)}"></div>
+                    <div class="form-group"><label>Card 1 Subtitle</label><input class="form-input" id="set_hero_float_1_sub" value="${esc(s.hero_float_1_sub)}"></div>
+                    <div class="form-group"><label>Card 2 Icon</label><input class="form-input" id="set_hero_float_2_icon" value="${esc(s.hero_float_2_icon)}"></div>
+                    <div class="form-group"><label>Card 2 Title</label><input class="form-input" id="set_hero_float_2_title" value="${esc(s.hero_float_2_title)}"></div>
+                    <div class="form-group"><label>Card 2 Subtitle</label><input class="form-input" id="set_hero_float_2_sub" value="${esc(s.hero_float_2_sub)}"></div>
+                    <div class="form-group"><label>Card 3 Icon</label><input class="form-input" id="set_hero_float_3_icon" value="${esc(s.hero_float_3_icon)}"></div>
+                    <div class="form-group"><label>Card 3 Title</label><input class="form-input" id="set_hero_float_3_title" value="${esc(s.hero_float_3_title)}"></div>
+                    <div class="form-group"><label>Card 3 Subtitle</label><input class="form-input" id="set_hero_float_3_sub" value="${esc(s.hero_float_3_sub)}"></div>
+                </div>
+                <div class="form-group"><label>Center Circle Emoji</label><input class="form-input" id="set_hero_circle_emoji" value="${esc(s.hero_circle_emoji)}"></div>
+
+                <h3 style="margin:2rem 0 1rem;">📊 Stats Bar</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-group"><label>Stat 1 Number</label><input class="form-input" id="set_stat_1_num" value="${esc(s.stat_1_num)}"></div>
+                    <div class="form-group"><label>Stat 1 Label</label><input class="form-input" id="set_stat_1_label" value="${esc(s.stat_1_label)}"></div>
+                    <div class="form-group"><label>Stat 2 Number</label><input class="form-input" id="set_stat_2_num" value="${esc(s.stat_2_num)}"></div>
+                    <div class="form-group"><label>Stat 2 Label</label><input class="form-input" id="set_stat_2_label" value="${esc(s.stat_2_label)}"></div>
+                    <div class="form-group"><label>Stat 3 Number</label><input class="form-input" id="set_stat_3_num" value="${esc(s.stat_3_num)}"></div>
+                    <div class="form-group"><label>Stat 3 Label</label><input class="form-input" id="set_stat_3_label" value="${esc(s.stat_3_label)}"></div>
+                    <div class="form-group"><label>Stat 4 Number</label><input class="form-input" id="set_stat_4_num" value="${esc(s.stat_4_num)}"></div>
+                    <div class="form-group"><label>Stat 4 Label</label><input class="form-input" id="set_stat_4_label" value="${esc(s.stat_4_label)}"></div>
+                </div>
+
+                <h3 style="margin:2rem 0 1rem;">📝 Section Headings</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                    <div class="form-group"><label>Explore Title</label><input class="form-input" id="set_explore_title" value="${esc(s.explore_title)}"></div>
+                    <div class="form-group"><label>Explore Subtitle</label><input class="form-input" id="set_explore_subtitle" value="${esc(s.explore_subtitle)}"></div>
+                    <div class="form-group"><label>Materials Title</label><input class="form-input" id="set_materials_title" value="${esc(s.materials_title)}"></div>
+                    <div class="form-group"><label>Materials Subtitle</label><input class="form-input" id="set_materials_subtitle" value="${esc(s.materials_subtitle)}"></div>
+                    <div class="form-group"><label>Roadmaps Title</label><input class="form-input" id="set_roadmaps_title" value="${esc(s.roadmaps_title)}"></div>
+                    <div class="form-group"><label>Roadmaps Subtitle</label><input class="form-input" id="set_roadmaps_subtitle" value="${esc(s.roadmaps_subtitle)}"></div>
+                    <div class="form-group"><label>News Title</label><input class="form-input" id="set_news_title" value="${esc(s.news_title)}"></div>
+                    <div class="form-group"><label>News Subtitle</label><input class="form-input" id="set_news_subtitle" value="${esc(s.news_subtitle)}"></div>
+                </div>
+
+                <h3 style="margin:2rem 0 1rem;">🎯 CTA Section</h3>
+                <div class="form-group"><label>CTA Title</label><input class="form-input" id="set_cta_title" value="${esc(s.cta_title)}"></div>
+                <div class="form-group"><label>CTA Subtitle</label><input class="form-input" id="set_cta_subtitle" value="${esc(s.cta_subtitle)}"></div>
+                <div class="form-group"><label>CTA Button</label><input class="form-input" id="set_cta_button" value="${esc(s.cta_button)}"></div>
+
+                <h3 style="margin:2rem 0 1rem;">🔧 Other</h3>
+                <div class="form-group"><label>Announcement</label><input class="form-input" id="set_announcement" value="${esc(s.announcement || '')}"></div>
+                <div class="form-group"><label>Footer Text</label><input class="form-input" id="set_footer_text" value="${esc(s.footer_text || '')}"></div>
+
+                <button class="btn btn-gold" style="margin-top:1.5rem;padding:1rem 2rem;font-size:1rem;" onclick="saveAllSettings()">💾 Save All Settings</button>
+            </div>
+
+            <div class="card" style="margin-top:1rem;">
+                <div class="card-header"><h2 class="card-title">Admin Account</h2></div>
+                <div class="form-group"><label>Name</label><input class="form-input" value="${esc(currentProfile?.full_name || '')}" readonly></div>
+                <div class="form-group"><label>Email</label><input class="form-input" value="${esc(currentUser?.email || '')}" readonly></div>
+                <div class="form-group"><label>Role</label><input class="form-input" value="${esc(currentProfile?.role || 'admin')}" readonly></div>
+            </div>
+        `;
+    } catch (e) {
+        container.innerHTML = `<p style="color:var(--red-500);">Error: ${esc(friendlyError(e))}</p>`;
+    }
+}
+        
     async function saveAllSettings() {
         const keys = ['primary_color','secondary_color','accent_color','background_color','text_color','hero_title','hero_subtitle','hero_button_1','hero_button_2','quick_access_title','materials_title','roadmaps_title','news_title','announcement','footer_text'];
         const patch = {};
