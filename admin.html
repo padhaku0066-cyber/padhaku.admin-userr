@@ -227,18 +227,40 @@
         if (isOwner()) return true;
         return isContentManager() && CONTENT_MANAGER_PAGES.has(page);
     }
-
-    const defaultSiteSettings = {
-        primary_color: '#102a43', secondary_color: '#243b53', accent_color: '#f59e0b',
-        background_color: '#ffffff', text_color: '#102a43',
-        hero_title: 'Learn Today.\nPrepare for Tomorrow.',
-        hero_subtitle: 'Study materials, video lectures, notes, practice questions, current affairs and preparation roadmaps—all in one place.',
-        hero_button_1: '📚 Explore Classes', hero_button_2: '🎯 Competitive Exams',
-        quick_access_title: 'Quick Access', materials_title: 'Latest Study Materials',
-        roadmaps_title: 'Popular Roadmaps', news_title: 'Education News',
-        announcement: '', footer_text: 'PADHAKU — Learn. Practice. Succeed.'
-    };
-
+const defaultSiteSettings = {
+    primary_color: '#102a43', secondary_color: '#243b53', accent_color: '#f59e0b',
+    background_color: '#ffffff', text_color: '#102a43',
+    pw_blue_color: '#1a73e8', pw_yellow_color: '#ffc107', pw_orange_color: '#ff6f00',
+    hero_title: 'Learn Today.\nPrepare for Tomorrow.',
+    hero_subtitle: 'Study materials, video lectures, notes, practice questions, current affairs and preparation roadmaps—all in one place.',
+    hero_badge: '🏆 India\'s Premium Learning Platform',
+    hero_button_1: 'Get Started →', hero_button_2: 'Explore Courses',
+    hero_feature_1: 'Free Study Materials',
+    hero_feature_2: 'Expert-curated Content',
+    hero_feature_3: 'Chapter-wise Tests',
+    hero_feature_4: 'Preparation Roadmaps',
+    hero_float_1_icon: '📚', hero_float_1_title: '500+ Materials', hero_float_1_sub: 'Notes & Videos',
+    hero_float_2_icon: '🎯', hero_float_2_title: '50+ Exams', hero_float_2_sub: 'JEE, NEET, UPSC',
+    hero_float_3_icon: '✅', hero_float_3_title: '100% Free', hero_float_3_sub: 'No hidden charges',
+    hero_circle_emoji: '📖',
+    stat_1_num: '10K+', stat_1_label: 'Active Students',
+    stat_2_num: '500+', stat_2_label: 'Study Materials',
+    stat_3_num: '50+', stat_3_label: 'Exams Covered',
+    stat_4_num: '100%', stat_4_label: 'Free Forever',
+    explore_title: 'Explore Padhaku',
+    explore_subtitle: 'Everything you need to prepare smarter',
+    materials_title: 'Latest Materials',
+    materials_subtitle: 'Hand-picked resources to get you started',
+    roadmaps_title: 'Popular Roadmaps',
+    roadmaps_subtitle: 'Step-by-step plans trusted by toppers',
+    news_title: 'Education News',
+    news_subtitle: 'Latest updates from the education world',
+    cta_title: 'Ready to start learning?',
+    cta_subtitle: 'Join thousands of students preparing smarter with PADHAKU.',
+    cta_button: 'Student Login →',
+    announcement: '', footer_text: 'PADHAKU — Learn. Practice. Succeed.'
+};
+   
     const defaultStructure = {
         classes: Array.from({length: 12}, (_, i) => ({ id: i + 1, name: `Class ${i+1}`, subjects: [] })),
         streams: [
