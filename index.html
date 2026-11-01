@@ -1579,7 +1579,7 @@
             <div class="pw-hero-bg"></div>
             <div class="pw-hero-inner">
                 <div class="pw-hero-left">
-                    <div class="pw-badge">${esc(siteSettings.hero_badge)}</div>
+                         <div class="pw-badge">${esc(siteSettings.hero_badge)}</div>
 <h1 class="pw-heading">
     ${esc(siteSettings.hero_title).split('\n').map((line, i) => `<span class="${i === 0 ? 'pw-heading-black' : 'pw-heading-blue'}">${line}</span>`).join('<br>')}
 </h1>
@@ -1591,7 +1591,6 @@
     <div class="pw-feature"><span class="pw-check">✓</span> ${esc(siteSettings.hero_feature_3)}</div>
     <div class="pw-feature"><span class="pw-check">✓</span> ${esc(siteSettings.hero_feature_4)}</div>
 </div>
-
                     <div class="pw-cta-group">
                         <button class="pw-btn-primary" onclick="openLogin()">Get Started →</button>
                         <button class="pw-btn-secondary" onclick="navigate('classes')">Explore Courses</button>
