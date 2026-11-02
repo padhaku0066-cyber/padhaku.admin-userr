@@ -2833,7 +2833,27 @@
             document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
         }
     });
-
+    // ==================== HOVER EXPAND ANIMATION ====================
+    function initHoverExpand() {
+        const container = document.getElementById('hoverExpand');
+        if (!container) return;
+        
+        const items = container.querySelectorAll('.hover-expand-item');
+        
+        items.forEach(item => {
+            // Hover event
+            item.addEventListener('mouseenter', () => {
+                items.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+            
+            // Click event for mobile
+            item.addEventListener('click', () => {
+                items.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+    }
     async function initializeApp() {
         console.log('🚀 Initializing PADHAKU...');
         renderHome(document.getElementById('mainContent'));
