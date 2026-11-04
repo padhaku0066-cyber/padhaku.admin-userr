@@ -1250,7 +1250,19 @@
             item.addEventListener('click', () => { items.forEach(i => i.classList.remove('active')); item.classList.add('active'); });
         });
     }
+   // ==================== SPLASH SCREEN NAVIGATION ====================
+function choosePath(path) {
+    const splashScreen = document.getElementById('splashScreen');
 
+    if (path === 'study') {
+        splashScreen.style.display = 'none';
+        navigate('home');
+    }
+    else if (path === 'skill') {
+        splashScreen.style.display = 'none';
+        navigate('skill-home');
+    }
+}
     // ==================== INIT ====================
     document.getElementById('loginModal').addEventListener('click', function(e) { if (e.target === this) closeLogin(); });
     document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { closeLogin(); document.querySelectorAll('.modal-overlay').forEach(m => m.remove()); } });
